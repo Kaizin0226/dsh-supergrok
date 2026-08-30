@@ -1,94 +1,107 @@
-<p align="center">
-  <img src="docs/en/banner.jpg" alt="dsh-llm-grok-oauth" width="920">
-</p>
+# Hardened SuperGrok OAuth provider for DSH
 
-<h1 align="center">dsh-llm-grok-oauth</h1>
+This private derived repository manages the complete DSH × SuperGrok source boundary:
 
-<p align="center">
-  DeepSeek Harness plugin: sign in with a Grok account under Settings → Models<br>
-  and run models on a SuperGrok / X Premium+ subscription. No xAI API key.
-</p>
+- the hardened OAuth provider and live subscription catalog at the repository root;
+- the model-independent Grok optimization preset under `presets/grok-optimized`;
+- synthetic xAI/DSH protocol fixtures and reviewed overlay source under `contracts/xai-dsh`;
+- parameterized Windows install, verification, and rollback tooling under `deployment/windows`.
 
-<p align="center">
-  English · <a href="README.zh.md">简体中文</a>
-</p>
+Real credentials, OAuth grants, settings, sessions, databases, logs, production evidence, local hashes, backups, absolute paths, npm packages, and reference clones are excluded. The public provider repository is configured only as Git remote `upstream`; this is not a GitHub fork.
 
-<p align="center">
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-1f6feb?style=flat-square" alt="dsh-plugin"></a>
-  <a href="https://github.com/wangyaominde/dsh-llm-grok-oauth/stargazers"><img src="https://img.shields.io/github/stars/wangyaominde/dsh-llm-grok-oauth?style=flat-square" alt="stars"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/wangyaominde/dsh-llm-grok-oauth?style=flat-square&label=license" alt="MIT"></a>
-  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/dsh-0.1.0--rc.6+-111827?style=flat-square" alt="dsh"></a>
-  <img src="https://img.shields.io/badge/API%20Key-not%20required-2ea44f?style=flat-square" alt="no api key">
-</p>
+This local build is pinned to upstream
+`wangyaominde/dsh-llm-grok-oauth@108cc76224d1845b5c88602f7c7a24bb1ced0497`
+and hardened as version `0.3.0-hardened.5`.
 
----
+It exposes one fixed provider and treats the signed-in account's live
+subscription catalog as the only source of model entitlement:
 
-The built-in Grok provider in DSH accepts an API key only. This plugin adds account login on the same page. The control is at:
+- provider: `grok-oauth`
+- default model: `grok-4.6`
+- default reasoning effort: `high`
+- intended DSH permission: `read-only`
 
-**Settings → Models → Grok (xAI 订阅)**
+The selector advertises only visible, text-capable `grok-*` models returned by
+the authenticated subscription catalog and backed by a supported wire protocol.
+The catalog's `supportedInApi` flag is validated but does not filter session
+OAuth models because Grok Build uses it for API-key visibility. Reasoning efforts
+come from each exact model entry. Selector ids are mapped to their catalog-owned
+canonical wire values (for example `deep` to `xhigh`) before dispatch. A static
+list, successful login, or another model's entitlement is never accepted as
+proof. Before every inference, the adapter forces one catalog refresh and uses
+that same fresh snapshot to validate the exact model, effort, and backend;
+unknown, removed, or stale entries fail before
+inference network I/O, without clamping, aliases, or fallback.
+Security-critical aliases across an entry, `info`, and `_meta` must agree or the
+entire catalog fails closed. One reasoning-effort entry may declare
+`default: true`; it must be unique and agree with any independent default field.
+The complete selector catalog is read from `/v1/models`; `/v1/models-v2` is a
+404/405-only compatibility fallback. A loopback same-origin diagnostic route
+exposes only bounded status enums and counts, never catalog values, response
+bodies, headers, tokens, or error messages.
 
-<p align="center">
-  <img src="docs/en/models-login.jpg" alt="Settings → Models → Grok (xAI subscription)" width="720">
-</p>
+On-demand catalog caching remains controlled by `modelsRefreshSeconds`; its
+default is 60 seconds and the accepted range is 10 through 86400 seconds.
+Ordinary DSH processes additionally perform at most one non-overlapping live
+catalog synchronization every 3600 seconds, notifying DSH only when the model or
+capability fingerprint changes. Refresh failures clear stale entitlement. The
+production default remains `grok-4.6/high`; discovering a model never changes
+that default automatically.
 
-## Install
+## Fixed security boundary
 
-Requires [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and [pnpm](https://pnpm.io). If `dsh` is not on `PATH`, use `npx`:
+All OAuth, catalog, and inference traffic uses one pinned dispatcher through
+`http://127.0.0.1:7897`. There is no direct fallback, environment/system proxy
+discovery, redirect following, curl fallback, or configurable endpoint.
+Outbound requests are limited to the paths declared by the runtime code under:
 
-```sh
-npx @deepseek-ai/dsh plugin --profile web add github:wangyaominde/dsh-llm-grok-oauth
-```
+- `https://auth.x.ai`
+- `https://cli-chat-proxy.grok.com/v1`
 
-If the `dsh` command is already installed:
+The only browser navigation targets accepted are HTTPS pages on
+`auth.x.ai` or `accounts.x.ai`. The server never launches a browser or shell;
+the user must click the validated link in the DSH UI.
 
-```sh
-dsh plugin --profile web add github:wangyaominde/dsh-llm-grok-oauth
-```
+Protocol headers are derived from the fixed snapshot
+`xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571`.
+The client identifier, version, and User-Agent identify this plugin truthfully;
+HTTP 426 fails closed rather than impersonating an official Grok binary.
 
-Restart `dsh web` after installation. Client modules are loaded at process start; the login button will not appear until restart.
+## Credentials and login
 
-If `pnpm` warns about missing peers such as `@deepseek-ai/cordis`, ignore it. Those packages are provided by the DSH runtime and should not be installed into the plugin directory.
+Login is always a fresh DSH-only OAuth device flow. The plugin never reads,
+imports, copies, modifies, or deletes any official Grok CLI credential. Tokens
+are stored only as a DSH grant record at `llm-grok-oauth/tokens`
+(UI label `GROK_OAUTH_TOKENS`). If that service is unavailable or the stored record is
+invalid, the plugin refuses to operate; it has no plaintext file fallback.
 
-## Usage
+Management routes require loopback transport, a loopback `Host`, same-origin
+browser fetch metadata, an exact same-origin `Origin` for mutations, JSON,
+bounded empty request bodies, and a CSRF nonce obtained from the status route.
 
-Open **Settings → Models** and click **Sign in with Grok** on **Grok (xAI 订阅)**. Browser sign-in is the default. The official Grok CLI is not required.
+DSH-level automatic retries are disabled. Normal inference can perform at most
+one replay after a single-flight token refresh when the first response is 401.
+Set `DSH_SUPERGROK_ACCEPTANCE=1` in the dedicated acceptance DSH child process
+to disable even that replay. `XAI_API_KEY` is never read by this package.
 
-1. Complete xAI authorization in the browser. The confirmation code is issued by xAI for that attempt; it is not shared across machines or clicks.
-2. Return to a session and select a Grok model. If the current session still targets DeepSeek, start a new session before sending.
+Live catalog synchronization is not automatic plugin updating. Only new models
+and efforts compatible with the pinned protocol snapshot and the existing
+`responses` or `chat/completions` backends can appear automatically. A new
+endpoint, backend, or catalog protocol shape fails closed and requires a newly
+reviewed pinned plugin release.
 
-The DSH process must be able to reach `https://auth.x.ai` and `https://cli-chat-proxy.grok.com`. Sign-in, the model catalog, and chat share the same proxy stack (`HTTPS_PROXY` or the macOS system proxy). If a browser can open those hosts but sign-in or sending a message still fails, set the proxy in the environment that launches `dsh web` and retry.
+## Verification
 
-If the official Grok CLI is already signed in, that session is reused silently. Machines without the CLI are not asked to run `grok login`.
+Run `npm test`. The test runner explicitly removes `XAI_API_KEY` from itself
+and all test subprocesses and reports only the boolean evidence
+`XAI_API_KEY absent=true`.
 
-Sign-out is on the same row. It clears this plugin's session immediately and does not delete the official Grok CLI login file. CLI reuse stays off until Sign in is clicked again. If an older build signs back in immediately after Sign out, or sign-in works but chat fails with `TRANSPORT`, update to 0.2.10 and fully restart `dsh web`.
+Run `npm run canonical-hash` to compute the Bridge trust hash. The exact file
+set and record format are declared in `supergrok-hardening.json`; missing files
+and symbolic links are rejected. The publishable `npm-shrinkwrap.json` is part
+of that runtime set and must remain present after installation.
 
-## Requirements
-
-| Item | Requirement |
-| --- | --- |
-| DeepSeek Harness | `0.1.0-rc.6` or later |
-| Account | SuperGrok or X Premium+ |
-| Official Grok CLI | not required. Reused only when already signed in |
-| xAI API key | not required |
-
-## Relation to the API key field
-
-| | This plugin | Built-in Grok config |
-| --- | --- | --- |
-| Location | Settings → Models | Settings → Models |
-| Authentication | Grok account login | API key |
-| Billing | SuperGrok / X Premium+ | xAI API credit |
-
-Both may be configured at the same time. This plugin does not write or overwrite a saved API key.
-
-## Uninstall
-
-```sh
-npx @deepseek-ai/dsh plugin --profile web remove dsh-llm-grok-oauth
-```
-
-Restart `dsh web` after uninstall.
-
-## License
-
-[MIT](LICENSE)
+Run `npm run source-hash -- --list` in the complete source checkout to record
+the source digest and its exact ordered file set. The source digest is release
+provenance; an installed runtime package intentionally does not contain all
+tests, scripts, and source documentation needed to reproduce it.

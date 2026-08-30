@@ -1,0 +1,4 @@
+# Merge this mapping into the production pnpm-workspace.yaml only after the
+# zero-network overlay tests and the separate rollout gate pass.
+patchedDependencies:
+  '@earendil-works/pi-ai@0.82.1': patches/@earendil-works__pi-ai@0.82.1-xai-contract.patch

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "provider": "grok-oauth",
+  "defaultModel": "grok-4.6",
+  "defaultReasoningEffort": "high",
+  "permission": "read-only",
+  "pluginVersion": "0.3.0-hardened.5",
+  "settingsUi": {
+    "providerGroup": "grok-oauth",
+    "catalogRpc": "llm.models",
+    "liveCatalogReadOnly": true,
+    "editableFields": [
+      "modelsRefreshSeconds"
+    ],
+    "otherProviderFailuresExcluded": true,
+    "polling": false
+  },
+  "dynamicAccountCatalog": {
+    "enabled": true,
+    "authoritative": true,
+    "paths": [
+      "/v1/models",
+      "/v1/models-v2"
+    ],
+    "compatibilityFallbackStatuses": [
+      404,
+      405
+    ],
+    "onDemandTtlSetting": "modelsRefreshSeconds",
+    "onDemandTtlDefaultSeconds": 60,
+    "onDemandTtlMinSeconds": 10,
+    "onDemandTtlMaxSeconds": 86400,
+    "backgroundSyncSeconds": 3600,
+    "overlapAllowed": false,
+    "serveStaleOnRefreshFailure": false,
+    "notifyOnFingerprintChange": true,
+    "revalidateBeforeInference": true,
+    "forceFreshCatalogBeforeInference": true,
+    "requireHeaderBodyModelMatch": true,
+    "rejectConflictingAliases": true,
+    "reasoningEffortDefaultFlagPolicy": "unique-and-consistent",
+    "selectorEffortMapsToCanonicalWireValue": true,
+    "catalogDiagnosticValuesExcluded": true,
+    "abortInFlightRefreshOnDispose": true,
+    "generationIsolatedOnDispose": true,
+    "maxModels": 256,
+    "modelIdPattern": "^grok-[a-z0-9][a-z0-9._-]*$",
+    "modelIdMaxBytes": 128,
+    "maxReasoningEffortsPerModel": 16,
+    "reasoningEffortIdPattern": "^[a-z0-9][a-z0-9._-]*$",
+    "reasoningEffortIdMaxBytes": 32,
+    "allowedBackends": [
+      "chat",
+      "chat_completions",
+      "responses"
+    ]
+  },
+  "allowedOrigins": [
+    "https://auth.x.ai",
+    "https://accounts.x.ai",
+    "https://cli-chat-proxy.grok.com"
+  ],
+  "proxyUrl": "http://127.0.0.1:7897",
+  "acceptanceEmptyToolCatalogGuard": true,
+  "acceptanceOAuthNetworkDisabled": true,
+  "acceptanceSingleInferenceLatch": true,
+  "protocolProvenance": "xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571",
+  "hostPeerVersions": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-credentials": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1"
+  },
+  "canonicalRuntimeTree": {
+    "algorithm": "sha256",
+    "encoding": "UTF-8",
+    "pathSeparator": "/",
+    "order": "relative-path-bytewise-ascending",
+    "record": "path + NUL + bytes + NUL",
+    "includes": [
+      "package.json",
+      "npm-shrinkwrap.json",
+      "cordis.patch.yml",
+      "supergrok-hardening.json",
+      "lib/**/*.js"
+    ],
+    "rejectMissing": true,
+    "rejectSymlinks": true
+  }
+}

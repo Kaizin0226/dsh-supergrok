@@ -1,0 +1,14 @@
+{
+  "name": "dsh-official-xai-contract-candidate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/catalog-snapshot.test.mjs test/offline-source.test.mjs test/rollout.test.mjs",
+    "catalog:verify": "node scripts/catalog-snapshot.mjs verify --snapshot catalog/official-xai-language-models.snapshot.json",
+    "catalog:verify-promoted": "node scripts/catalog-snapshot.mjs verify --snapshot catalog/official-xai-language-models.snapshot.json --require-verified",
+    "settings:candidate": "node scripts/settings-candidate.mjs",
+    "profile:generate": "node scripts/settings-candidate.mjs profile --output profile/official-xai.profile.candidate.yml",
+    "launcher:verify": "node scripts/verify-launcher.mjs"
+  }
+}

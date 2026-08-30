@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "snapshotVersion": "bootstrap-2026-08-30.1",
+  "promotionStatus": "pending-canary",
+  "provider": "xai",
+  "endpoint": "/v1/language-models",
+  "asOf": null,
+  "source": {
+    "kind": "pending-official-language-models-capture",
+    "requestCount": 0,
+    "captureSha256": null,
+    "capturedAt": null,
+    "aliasesExcludedFromAllowlist": true
+  },
+  "directoryCanonicalModels": [],
+  "allowedModels": [],
+  "modelProfiles": []
+}

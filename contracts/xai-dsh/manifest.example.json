@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "candidate": "official-xai-contract-local-manifest",
+  "canonicalProviderBlock": {
+    "serialization": "replace-locally",
+    "sha256": "<LOCAL_SHA256>"
+  },
+  "profile": {
+    "path": "profile/official-xai.profile.candidate.yml",
+    "sha256": "<LOCAL_SHA256>"
+  },
+  "target": {
+    "root": "<DSH_ROOT>",
+    "dshAdapterVersion": "0.1.1-rc.2",
+    "piAiVersion": "0.82.1"
+  },
+  "catalog": {
+    "sha256": "<LOCAL_SHA256>"
+  },
+  "baseline": {
+    "settingsYaml": "<LOCAL_SHA256>",
+    "launcher": "<LOCAL_SHA256>",
+    "packageJson": "<LOCAL_SHA256>",
+    "pnpmWorkspaceYaml": "<LOCAL_SHA256>",
+    "pnpmLockYaml": "<LOCAL_SHA256>",
+    "pinnedPnpmShim": "<LOCAL_SHA256>",
+    "pinnedPnpmModule": "<LOCAL_SHA256>",
+    "pinnedPnpmDist": "<LOCAL_SHA256>",
+    "piAiOpenaiResponses": "<LOCAL_SHA256>",
+    "piAiOpenaiResponsesShared": "<LOCAL_SHA256>"
+  },
+  "overlay": {
+    "patchPath": "overlay/patches/@earendil-works__pi-ai@0.82.1-xai-contract.patch",
+    "patchSha256": "<LOCAL_SHA256>",
+    "expectedPatchedFiles": {
+      "openai-responses.js": "<LOCAL_SHA256>",
+      "openai-responses-shared.js": "<LOCAL_SHA256>"
+    }
+  },
+  "expected": {
+    "settingsYaml": "<LOCAL_SHA256>",
+    "launcher": "<LOCAL_SHA256>",
+    "packageJsonUnchanged": "<LOCAL_SHA256>"
+  }
+}

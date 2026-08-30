@@ -1,0 +1,516 @@
+diff --git a/dist/api/openai-responses-shared.js b/dist/api/openai-responses-shared.js
+index 254156f..d51cd61 100644
+--- a/dist/api/openai-responses-shared.js
++++ b/dist/api/openai-responses-shared.js
+@@ -71,6 +71,11 @@ export function convertResponsesMessages(model, context, allowedToolCallProvider
+         return normalized.length > 64 ? normalized.slice(0, 64) : normalized;
+     };
+     const normalizeToolCallId = (id, _targetModel, source) => {
++        if (model.provider === "xai" && source.provider === model.provider &&
++            source.api === model.api && source.model === model.id) {
++            // IDs accepted from this exact xAI turn were validated at intake.
++            return id;
++        }
+         if (!allowedToolCallProviders.has(model.provider))
+             return normalizeIdPart(id);
+         if (!id.includes("|"))
+@@ -132,6 +137,8 @@ export function convertResponsesMessages(model, context, allowedToolCallProvider
+             const isDifferentModel = assistantMsg.model !== model.id &&
+                 assistantMsg.provider === model.provider &&
+                 assistantMsg.api === model.api;
++            const isSameXaiReplay = model.provider === "xai" && !isDifferentModel &&
++                assistantMsg.provider === model.provider && assistantMsg.api === model.api;
+             let textBlockIndex = 0;
+             for (const block of msg.content) {
+                 if (block.type === "thinking") {
+@@ -172,8 +179,9 @@ export function convertResponsesMessages(model, context, allowedToolCallProvider
+                     // By omitting the id, we avoid triggering that validation (like cross-provider does).
+                     // When replaying custom-tool calls as a function_call, also drop non-fc_* ids such as
+                     // ctc_* custom-tool ids because function_call item ids must be fc_*.
+-                    if ((isDifferentModel && itemId?.startsWith("fc_")) ||
+-                        (customInputProperty === undefined && !itemId?.startsWith("fc_"))) {
++                    if (!isSameXaiReplay &&
++                        ((isDifferentModel && itemId?.startsWith("fc_")) ||
++                        (customInputProperty === undefined && !itemId?.startsWith("fc_")))) {
+                         itemId = undefined;
+                     }
+                     if (customInputProperty !== undefined) {
+@@ -304,8 +312,107 @@ function appendCustomToolCallInput(block, nextInput, close) {
+ }
+ export async function processResponsesStream(openaiStream, output, stream, model, options) {
+     let sawTerminalResponseEvent = false;
++    let createdResponseId;
++    let sawXaiBusinessEvent = false;
++    const providerToolCallIds = new Map();
++    const providerToolItemIds = new Map();
++    const completedTools = new Map();
++    const completedReasoningItems = new Map();
++    const completedMessageItems = new Map();
++    const xaiOutputItems = new Map();
++    const xaiReasoningIds = new Map();
++    const xaiMessageIds = new Map();
+     const outputSlots = new Map();
+     const reasoningBlocksById = new Map();
++    const assertProviderToolIdentity = (item, outputIndex) => {
++        if (typeof item.call_id !== "string" || item.call_id.trim().length === 0) {
++            throw new Error(`OpenAI Responses protocol error: ${item.type} is missing provider-issued call_id`);
++        }
++        if (typeof item.id !== "string" || item.id.trim().length === 0) {
++            throw new Error(`OpenAI Responses protocol error: ${item.type} is missing provider-issued item id`);
++        }
++        if (item.call_id.includes("|") || item.id.includes("|")) {
++            throw new Error(`OpenAI Responses protocol error: provider tool identity cannot contain |`);
++        }
++        if (typeof item.name !== "string" || item.name.trim().length === 0) {
++            throw new Error(`OpenAI Responses protocol error: ${item.type} is missing tool name`);
++        }
++        const existing = providerToolCallIds.get(item.call_id);
++        if (existing !== undefined && existing.itemId !== item.id) {
++            throw new Error(`OpenAI Responses protocol error: duplicate provider call_id ${item.call_id}`);
++        }
++        const existingCallId = providerToolItemIds.get(item.id);
++        if (existingCallId !== undefined && existingCallId !== item.call_id) {
++            throw new Error(`OpenAI Responses protocol error: duplicate provider item id ${item.id}`);
++        }
++        if (outputIndex !== undefined &&
++            existing?.outputIndex !== undefined &&
++            existing.outputIndex !== outputIndex) {
++            throw new Error(`OpenAI Responses protocol error: provider tool identity ${item.call_id}|${item.id} repeated across output indexes`);
++        }
++        if (existing !== undefined && (existing.type !== item.type || existing.name !== item.name)) {
++            throw new Error(`OpenAI Responses protocol error: provider tool identity ${item.call_id}|${item.id} changed type or name`);
++        }
++        providerToolCallIds.set(item.call_id, {
++            itemId: item.id,
++            outputIndex: existing?.outputIndex ?? outputIndex,
++            type: item.type,
++            name: item.name,
++        });
++        providerToolItemIds.set(item.id, item.call_id);
++    };
++    const assertXaiReasoningIdentity = (item) => {
++        if (typeof item.id !== "string" || item.id.trim().length === 0 || item.id.includes("|")) {
++            throw new Error("OpenAI Responses protocol error: xAI reasoning item has an invalid id");
++        }
++    };
++    const assertXaiMessageIdentity = (item) => {
++        if (typeof item.id !== "string" || item.id.trim().length === 0 || item.id.includes("|")) {
++            throw new Error("OpenAI Responses protocol error: xAI message item has an invalid id");
++        }
++    };
++    const assertXaiOutputIndex = (outputIndex) => {
++        if (!Number.isSafeInteger(outputIndex) || outputIndex < 0) {
++            throw new Error("OpenAI Responses protocol error: xAI output_index must be a non-negative safe integer");
++        }
++    };
++    const requiredUsageCount = (value, label) => {
++        if (!Number.isSafeInteger(value) || value < 0) {
++            throw new Error(`OpenAI Responses protocol error: invalid ${label}`);
++        }
++        return value;
++    };
++    const optionalUsageCount = (value, label) => {
++        return value === undefined || value === null ? 0 : requiredUsageCount(value, label);
++    };
++    const canonicalJson = (value) => {
++        if (Array.isArray(value))
++            return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
++        if (value && typeof value === "object") {
++            return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
++        }
++        return JSON.stringify(value);
++    };
++    const canonicalXaiReasoning = (item) => canonicalJson({
++        type: item.type,
++        id: item.id,
++        summary: item.summary ?? [],
++        content: item.content ?? [],
++        status: item.status ?? null,
++    });
++    const strictXaiArguments = (value) => {
++        let parsed;
++        try {
++            parsed = JSON.parse(value);
++        }
++        catch {
++            throw new Error("OpenAI Responses protocol error: completed xAI function arguments are not valid JSON");
++        }
++        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
++            throw new Error("OpenAI Responses protocol error: completed xAI function arguments must be an object");
++        }
++        return parsed;
++    };
+     const getSlot = (outputIndex, type) => {
+         const slot = outputSlots.get(outputIndex);
+         return slot?.type === type ? slot : undefined;
+@@ -321,6 +428,32 @@ export async function processResponsesStream(openaiStream, output, stream, model
+         });
+     };
+     const createSlot = (outputIndex, item) => {
++        if (model.provider === "xai") {
++            assertXaiOutputIndex(outputIndex);
++            if (!new Set(["reasoning", "message", "function_call", "custom_tool_call"]).has(item.type)) {
++                throw new Error(`OpenAI Responses protocol error: unsupported xAI output item type ${item.type}`);
++            }
++            if (xaiOutputItems.has(outputIndex)) {
++                throw new Error(`OpenAI Responses protocol error: duplicate xAI output_index ${outputIndex}`);
++            }
++            xaiOutputItems.set(outputIndex, { type: item.type, id: item.id });
++            if (item.type === "reasoning") {
++                assertXaiReasoningIdentity(item);
++                const existingIndex = xaiReasoningIds.get(item.id);
++                if (existingIndex !== undefined && existingIndex !== outputIndex) {
++                    throw new Error(`OpenAI Responses protocol error: duplicate xAI reasoning item id ${item.id}`);
++                }
++                xaiReasoningIds.set(item.id, outputIndex);
++            }
++            if (item.type === "message") {
++                assertXaiMessageIdentity(item);
++                const existingIndex = xaiMessageIds.get(item.id);
++                if (existingIndex !== undefined && existingIndex !== outputIndex) {
++                    throw new Error(`OpenAI Responses protocol error: duplicate xAI message item id ${item.id}`);
++                }
++                xaiMessageIds.set(item.id, outputIndex);
++            }
++        }
+         if (item.type === "reasoning") {
+             const block = { type: "thinking", thinking: "" };
+             output.content.push(block);
+@@ -342,6 +475,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+             return slot;
+         }
+         if (item.type === "function_call") {
++            if (model.provider === "xai")
++                assertProviderToolIdentity(item, outputIndex);
+             const block = {
+                 type: "toolCall",
+                 id: `${item.call_id}|${item.id}`,
+@@ -360,6 +495,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+             return slot;
+         }
+         if (item.type === "custom_tool_call") {
++            if (model.provider === "xai")
++                assertProviderToolIdentity(item, outputIndex);
+             const inputProperty = options?.grammarToolInputProperties?.get(item.name) ?? "input";
+             const input = item.input || "";
+             const block = {
+@@ -407,18 +544,139 @@ export async function processResponsesStream(openaiStream, output, stream, model
+             });
+         }
+     };
+-    const finalizeResponse = (response) => {
+-        sawTerminalResponseEvent = true;
++    const finalizeResponse = (response, terminalEventType) => {
++        for (const item of response.output ?? []) {
++            if (model.provider === "xai" &&
++                (item.type === "function_call" || item.type === "custom_tool_call"))
++                assertProviderToolIdentity(item);
++        }
+         backfillReasoningSignatures(response.output ?? []);
++        let xaiCostInUsd;
++        if (model.provider === "xai") {
++            const expectedStatus = terminalEventType === "response.completed" ? "completed" : "incomplete";
++            if (response?.status !== expectedStatus) {
++                throw new Error(`OpenAI Responses protocol error: ${terminalEventType} carried status ${response?.status}`);
++            }
++            if (typeof response?.id !== "string" || response.id.trim().length === 0 ||
++                (createdResponseId !== undefined && response.id !== createdResponseId)) {
++                throw new Error("OpenAI Responses protocol error: xAI terminal response id is missing or drifted");
++            }
++            if (outputSlots.size !== 0) {
++                throw new Error("OpenAI Responses protocol error: terminal xAI response has unfinished output items");
++            }
++            const terminalTools = [];
++            const terminalReasoning = new Map();
++            const terminalMessages = new Map();
++            for (const item of response.output ?? []) {
++                if (!new Set(["reasoning", "message", "function_call", "custom_tool_call"]).has(item.type)) {
++                    throw new Error(`OpenAI Responses protocol error: unsupported xAI terminal output item type ${item.type}`);
++                }
++                if (item.type === "function_call" || item.type === "custom_tool_call") {
++                    const identity = `${item.call_id}|${item.id}`;
++                    const payload = item.type === "function_call"
++                        ? canonicalJson(strictXaiArguments(item.arguments))
++                        : typeof item.input === "string"
++                            ? item.input
++                            : (() => { throw new Error("OpenAI Responses protocol error: completed xAI custom tool input must be a string"); })();
++                    terminalTools.push([identity, {
++                            type: item.type,
++                            name: item.name,
++                            status: item.status ?? null,
++                            payload,
++                        }]);
++                }
++                if (item.type === "reasoning") {
++                    assertXaiReasoningIdentity(item);
++                    if (terminalReasoning.has(item.id)) {
++                        throw new Error(`OpenAI Responses protocol error: duplicate terminal xAI reasoning item ${item.id}`);
++                    }
++                    if (typeof item.encrypted_content !== "string" || item.encrypted_content.length === 0) {
++                        throw new Error(`OpenAI Responses protocol error: reasoning item ${item.id} is missing encrypted_content`);
++                    }
++                    terminalReasoning.set(item.id, {
++                        canonical: canonicalXaiReasoning(item),
++                        encryptedContent: item.encrypted_content,
++                    });
++                }
++                if (item.type === "message") {
++                    assertXaiMessageIdentity(item);
++                    if (terminalMessages.has(item.id)) {
++                        throw new Error(`OpenAI Responses protocol error: duplicate terminal xAI message item ${item.id}`);
++                    }
++                    terminalMessages.set(item.id, canonicalJson(item));
++                }
++            }
++            if (terminalTools.length !== completedTools.size ||
++                terminalTools.some(([identity, record]) => JSON.stringify(completedTools.get(identity)) !== JSON.stringify(record))) {
++                throw new Error("OpenAI Responses protocol error: terminal xAI tool items do not match completed streamed items");
++            }
++            if (terminalReasoning.size !== completedReasoningItems.size ||
++                [...terminalReasoning].some(([id, value]) => completedReasoningItems.get(id) !== value.canonical)) {
++                throw new Error("OpenAI Responses protocol error: terminal xAI reasoning items do not match persisted streamed items");
++            }
++            if (terminalMessages.size !== completedMessageItems.size ||
++                [...terminalMessages].some(([id, value]) => completedMessageItems.get(id) !== value)) {
++                throw new Error("OpenAI Responses protocol error: terminal xAI message items do not match completed streamed items");
++            }
++            for (const [id, terminal] of terminalReasoning) {
++                const block = reasoningBlocksById.get(id);
++                let persisted;
++                try {
++                    persisted = JSON.parse(block?.thinkingSignature ?? "null");
++                }
++                catch {
++                    throw new Error(`OpenAI Responses protocol error: reasoning item ${id} has an invalid replay signature`);
++                }
++                if (typeof persisted?.encrypted_content !== "string" || persisted.encrypted_content.length === 0) {
++                    throw new Error(`OpenAI Responses protocol error: reasoning item ${id} is missing encrypted_content`);
++                }
++                if (persisted.encrypted_content !== terminal.encryptedContent) {
++                    throw new Error(`OpenAI Responses protocol error: reasoning item ${id} encrypted_content drifted at terminal`);
++                }
++            }
++        }
++        sawTerminalResponseEvent = true;
+         if (response?.id) {
+             output.responseId = response.id;
+         }
+-        if (response?.usage) {
++        if (model.provider === "xai") {
++            if (!response?.usage || typeof response.usage !== "object") {
++                throw new Error("OpenAI Responses protocol error: successful terminal response is missing usage");
++            }
++            const inputDetails = response.usage.input_tokens_details;
++            const inputTokens = requiredUsageCount(response.usage.input_tokens, "usage.input_tokens");
++            const outputTokens = requiredUsageCount(response.usage.output_tokens, "usage.output_tokens");
++            const totalTokens = requiredUsageCount(response.usage.total_tokens, "usage.total_tokens");
++            const costInUsdTicks = requiredUsageCount(response.usage.cost_in_usd_ticks, "usage.cost_in_usd_ticks");
++            const cachedTokens = optionalUsageCount(inputDetails?.cached_tokens, "usage.input_tokens_details.cached_tokens");
++            const cacheWriteTokens = optionalUsageCount(inputDetails?.cache_write_tokens, "usage.input_tokens_details.cache_write_tokens");
++            const reasoningTokens = optionalUsageCount(response.usage.output_tokens_details?.reasoning_tokens, "usage.output_tokens_details.reasoning_tokens");
++            if (totalTokens !== inputTokens + outputTokens) {
++                throw new Error("OpenAI Responses protocol error: usage.total_tokens does not equal input_tokens + output_tokens");
++            }
++            if (cachedTokens + cacheWriteTokens > inputTokens) {
++                throw new Error("OpenAI Responses protocol error: cache token details exceed input_tokens");
++            }
++            if (reasoningTokens > outputTokens) {
++                throw new Error("OpenAI Responses protocol error: reasoning_tokens exceeds output_tokens");
++            }
++            xaiCostInUsd = costInUsdTicks / 1e10;
++            output.usage = {
++                // OpenAI includes cached and cache-write tokens in input_tokens, so subtract both.
++                input: inputTokens - cachedTokens - cacheWriteTokens,
++                output: outputTokens,
++                cacheRead: cachedTokens,
++                cacheWrite: cacheWriteTokens,
++                reasoning: reasoningTokens,
++                totalTokens,
++                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
++            };
++        }
++        else if (response?.usage) {
+             const inputDetails = response.usage.input_tokens_details;
+             const cachedTokens = inputDetails?.cached_tokens || 0;
+             const cacheWriteTokens = inputDetails?.cache_write_tokens || 0;
+             output.usage = {
+-                // OpenAI includes cached and cache-write tokens in input_tokens, so subtract both.
+                 input: Math.max(0, (response.usage.input_tokens || 0) - cachedTokens - cacheWriteTokens),
+                 output: response.usage.output_tokens || 0,
+                 cacheRead: cachedTokens,
+@@ -429,6 +687,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+             };
+         }
+         calculateCost(model, output.usage);
++        if (xaiCostInUsd !== undefined)
++            output.usage.cost.total = xaiCostInUsd;
+         if (options?.applyServiceTierPricing) {
+             const serviceTier = options.resolveServiceTier
+                 ? options.resolveServiceTier(response?.service_tier, options.serviceTier)
+@@ -442,10 +702,23 @@ export async function processResponsesStream(openaiStream, output, stream, model
+         }
+     };
+     for await (const event of openaiStream) {
++        if (model.provider === "xai" && sawTerminalResponseEvent) {
++            throw new Error(`OpenAI Responses protocol error: event ${event.type} arrived after terminal response`);
++        }
+         if (event.type === "response.created") {
++            if (model.provider === "xai") {
++                const id = event.response?.id;
++                if (typeof id !== "string" || id.trim().length === 0 || createdResponseId !== undefined || sawXaiBusinessEvent) {
++                    throw new Error("OpenAI Responses protocol error: invalid or duplicate xAI response.created id");
++                }
++                createdResponseId = id;
++            }
+             output.responseId = event.response.id;
+         }
+-        else if (event.type === "response.output_item.added") {
++        else {
++            if (model.provider === "xai")
++                sawXaiBusinessEvent = true;
++            if (event.type === "response.output_item.added") {
+             createSlot(event.output_index, event.item);
+         }
+         else if (event.type === "response.reasoning_summary_text.delta") {
+@@ -543,6 +816,32 @@ export async function processResponsesStream(openaiStream, output, stream, model
+         }
+         else if (event.type === "response.output_item.done") {
+             const item = event.item;
++            if (model.provider === "xai") {
++                assertXaiOutputIndex(event.output_index);
++                const addedIdentity = xaiOutputItems.get(event.output_index);
++                if (addedIdentity !== undefined &&
++                    (addedIdentity.type !== item.type || addedIdentity.id !== item.id)) {
++                    throw new Error(`OpenAI Responses protocol error: xAI output_item.done does not match output_item.added at index ${event.output_index}`);
++                }
++                if (item.type === "function_call" || item.type === "custom_tool_call") {
++                    assertProviderToolIdentity(item, event.output_index);
++                    if (completedTools.has(`${item.call_id}|${item.id}`)) {
++                        throw new Error(`OpenAI Responses protocol error: duplicate completed xAI tool identity ${item.call_id}|${item.id}`);
++                    }
++                }
++                if (item.type === "reasoning") {
++                    assertXaiReasoningIdentity(item);
++                    if (completedReasoningItems.has(item.id)) {
++                        throw new Error(`OpenAI Responses protocol error: duplicate completed xAI reasoning item ${item.id}`);
++                    }
++                }
++                if (item.type === "message") {
++                    assertXaiMessageIdentity(item);
++                    if (completedMessageItems.has(item.id)) {
++                        throw new Error(`OpenAI Responses protocol error: duplicate completed xAI message item ${item.id}`);
++                    }
++                }
++            }
+             const slot = getOrCreateSlot(event.output_index, item);
+             if (item.type === "reasoning" && slot?.type === "thinking") {
+                 const summaryText = item.summary?.map((s) => s.text).join("\n\n") || "";
+@@ -557,6 +856,8 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                     partial: output,
+                 });
+                 outputSlots.delete(event.output_index);
++                if (model.provider === "xai")
++                    completedReasoningItems.set(item.id, canonicalXaiReasoning(item));
+             }
+             else if (item.type === "message" && slot?.type === "text") {
+                 slot.block.text = item.content?.map((c) => (c.type === "output_text" ? c.text : c.refusal)).join("") || "";
+@@ -568,11 +869,15 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                     partial: output,
+                 });
+                 outputSlots.delete(event.output_index);
++                if (model.provider === "xai")
++                    completedMessageItems.set(item.id, canonicalJson(item));
+             }
+             else if (item.type === "function_call" &&
+                 slot?.type === "toolCall" &&
+                 slot.block.partialJson !== undefined) {
+-                slot.block.arguments = parseStreamingJson(item.arguments || slot.block.partialJson || "{}");
++                slot.block.arguments = model.provider === "xai"
++                    ? strictXaiArguments(item.arguments)
++                    : parseStreamingJson(item.arguments || slot.block.partialJson || "{}");
+                 // Finalize in-place and strip the scratch buffer so replay only
+                 // carries parsed arguments.
+                 delete slot.block.partialJson;
+@@ -583,8 +888,18 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                     partial: output,
+                 });
+                 outputSlots.delete(event.output_index);
++                if (model.provider === "xai") {
++                    completedTools.set(`${item.call_id}|${item.id}`, {
++                        type: item.type,
++                        name: item.name,
++                        status: item.status ?? null,
++                        payload: canonicalJson(slot.block.arguments),
++                    });
++                }
+             }
+             else if (item.type === "custom_tool_call" && slot?.type === "toolCall" && slot.block.customInput) {
++                if (model.provider === "xai" && typeof item.input !== "string")
++                    throw new Error("OpenAI Responses protocol error: completed xAI custom tool input must be a string");
+                 pushToolCallDelta(slot, appendCustomToolCallInput(slot.block, item.input ?? getCustomToolCallInput(slot.block), true));
+                 delete slot.block.customInput;
+                 stream.push({
+@@ -594,15 +909,33 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                     partial: output,
+                 });
+                 outputSlots.delete(event.output_index);
++                if (model.provider === "xai") {
++                    completedTools.set(`${item.call_id}|${item.id}`, {
++                        type: item.type,
++                        name: item.name,
++                        status: item.status ?? null,
++                        payload: item.input,
++                    });
++                }
+             }
+         }
+         else if (event.type === "response.completed" || event.type === "response.incomplete") {
+-            finalizeResponse(event.response);
++            finalizeResponse(event.response, event.type);
+         }
+         else if (event.type === "error") {
+             throw new Error(`Error Code ${event.code}: ${event.message}` || "Unknown error");
+         }
+-        else if (event.type === "response.failed") {
++        else if (event.type === "response.failed" || event.type === "response.cancelled") {
++            if (model.provider === "xai") {
++                const expectedStatus = event.type === "response.failed" ? "failed" : "cancelled";
++                if (event.response?.status !== expectedStatus) {
++                    throw new Error(`OpenAI Responses protocol error: ${event.type} carried status ${event.response?.status}`);
++                }
++                if (typeof event.response?.id !== "string" || event.response.id.trim().length === 0 ||
++                    (createdResponseId !== undefined && event.response.id !== createdResponseId)) {
++                    throw new Error("OpenAI Responses protocol error: xAI terminal response id is missing or drifted");
++                }
++            }
+             sawTerminalResponseEvent = true;
+             const error = event.response?.error;
+             const details = event.response?.incomplete_details;
+@@ -613,6 +946,7 @@ export async function processResponsesStream(openaiStream, output, stream, model
+                     : "Unknown error (no error details in response)";
+             throw new Error(msg);
+         }
++        }
+     }
+     if (!sawTerminalResponseEvent) {
+         throw new Error("OpenAI Responses stream ended before a terminal response event");
+@@ -639,4 +973,4 @@ function mapStopReason(status) {
+         }
+     }
+ }
+-//# sourceMappingURL=openai-responses-shared.js.map
+\ No newline at end of file
++//# sourceMappingURL=openai-responses-shared.js.map
+diff --git a/dist/api/openai-responses.js b/dist/api/openai-responses.js
+index cbc70c2..b3775d0 100644
+--- a/dist/api/openai-responses.js
++++ b/dist/api/openai-responses.js
+@@ -11,7 +11,7 @@ import { buildCopilotDynamicHeaders, hasCopilotVisionInput } from "./github-copi
+ import { clampOpenAIPromptCacheKey } from "./openai-prompt-cache.js";
+ import { convertResponsesMessages, convertResponsesTools, processResponsesStream } from "./openai-responses-shared.js";
+ import { buildBaseOptions } from "./simple-options.js";
+-const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode"]);
++const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode", "xai"]);
+ // OpenAI Responses rejects max_output_tokens below 16: https://github.com/earendil-works/pi/issues/6265
+ const OPENAI_RESPONSES_MIN_OUTPUT_TOKENS = 16;
+ function hasHeader(headers, name) {

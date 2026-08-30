@@ -1,0 +1,6 @@
+schemaVersion: 1
+promotionStatus: pending-canary
+provider: xai
+endpoint: /v1/language-models
+models: []
+note: A production DSH provider profile is generated only from one hash-pinned verified official xAI language-model snapshot.

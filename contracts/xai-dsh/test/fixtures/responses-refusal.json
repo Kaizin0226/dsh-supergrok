@@ -1,0 +1,7 @@
+[
+  {"type":"response.created","response":{"id":"resp_refusal"}},
+  {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_refusal","role":"assistant","content":[],"status":"in_progress"}},
+  {"type":"response.refusal.delta","output_index":0,"delta":"I cannot comply with that request."},
+  {"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg_refusal","role":"assistant","content":[{"type":"refusal","refusal":"I cannot comply with that request."}],"status":"completed"}},
+  {"type":"response.completed","response":{"id":"resp_refusal","status":"completed","output":[{"type":"message","id":"msg_refusal","role":"assistant","content":[{"type":"refusal","refusal":"I cannot comply with that request."}],"status":"completed"}],"usage":{"input_tokens":12,"input_tokens_details":{"cached_tokens":0},"output_tokens":8,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":20,"cost_in_usd_ticks":1000000}}}
+]

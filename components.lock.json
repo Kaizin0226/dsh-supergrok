@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "dsh": {
+    "package": "@deepseek-ai/dsh",
+    "version": "0.1.1-rc.2"
+  },
+  "provider": {
+    "package": "dsh-llm-grok-oauth",
+    "version": "0.3.0-hardened.5",
+    "upstreamRepository": "https://github.com/wangyaominde/dsh-llm-grok-oauth.git",
+    "upstreamCommit": "108cc76224d1845b5c88602f7c7a24bb1ced0497"
+  },
+  "grokBuildProtocolReference": {
+    "repository": "https://github.com/xai-org/grok-build.git",
+    "commit": "bc7f02eddd3d84085849dc19ed216f11c23b0571",
+    "packageVersion": "1.0.12"
+  },
+  "preset": {
+    "id": "grok-optimized",
+    "version": "0.1.0"
+  },
+  "xaiDshContracts": {
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+if command -v node.exe >/dev/null 2>&1; then
+  node.exe scripts/check-repository-safety.mjs
+  exec node.exe scripts/check-git-history.mjs
+fi
+node scripts/check-repository-safety.mjs
+exec node scripts/check-git-history.mjs

@@ -1,0 +1,15 @@
+[
+  {"type":"response.created","response":{"id":"resp_first"}},
+  {"type":"response.output_item.added","output_index":0,"item":{"type":"reasoning","id":"rs_first","summary":[],"content":[]}},
+  {"type":"response.reasoning_summary_text.delta","output_index":0,"delta":"Need two independent read-only facts."},
+  {"type":"response.output_item.added","output_index":1,"item":{"type":"function_call","id":"fc_weather","call_id":"call_weather","name":"lookup_weather","arguments":""}},
+  {"type":"response.output_item.added","output_index":2,"item":{"type":"function_call","id":"fc_clock","call_id":"call_clock","name":"lookup_clock","arguments":""}},
+  {"type":"response.function_call_arguments.delta","output_index":1,"delta":"{\"city\":"},
+  {"type":"response.function_call_arguments.delta","output_index":2,"delta":"{\"zone\":"},
+  {"type":"response.function_call_arguments.delta","output_index":1,"delta":"\"Shanghai\"}"},
+  {"type":"response.function_call_arguments.delta","output_index":2,"delta":"\"Asia/Shanghai\"}"},
+  {"type":"response.output_item.done","output_index":0,"item":{"type":"reasoning","id":"rs_first","summary":[{"type":"summary_text","text":"Need two independent read-only facts."}],"content":[]}},
+  {"type":"response.output_item.done","output_index":1,"item":{"type":"function_call","id":"fc_weather","call_id":"call_weather","name":"lookup_weather","arguments":"{\"city\":\"Shanghai\"}"}},
+  {"type":"response.output_item.done","output_index":2,"item":{"type":"function_call","id":"fc_clock","call_id":"call_clock","name":"lookup_clock","arguments":"{\"zone\":\"Asia/Shanghai\"}"}},
+  {"type":"response.completed","response":{"id":"resp_first","status":"completed","output":[{"type":"reasoning","id":"rs_first","summary":[{"type":"summary_text","text":"Need two independent read-only facts."}],"content":[],"encrypted_content":"enc_reasoning_first"},{"type":"function_call","id":"fc_weather","call_id":"call_weather","name":"lookup_weather","arguments":"{\"city\":\"Shanghai\"}"},{"type":"function_call","id":"fc_clock","call_id":"call_clock","name":"lookup_clock","arguments":"{\"zone\":\"Asia/Shanghai\"}"}],"usage":{"input_tokens":120,"input_tokens_details":{"cached_tokens":40,"cache_write_tokens":10},"output_tokens":30,"output_tokens_details":{"reasoning_tokens":12},"total_tokens":150,"cost_in_usd_ticks":123456789}}}
+]

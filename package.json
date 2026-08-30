@@ -1,7 +1,7 @@
 {
   "name": "dsh-llm-grok-oauth",
-  "description": "Grok (xAI) subscription OAuth provider for DeepSeek Harness: one-click login in Settings → Models, token refresh, live catalog, streaming over cli-chat-proxy.grok.com",
-  "version": "0.2.10",
+  "description": "Pinned and hardened live-catalog SuperGrok OAuth provider for DeepSeek Harness",
+  "version": "0.3.0-hardened.5",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -12,23 +12,26 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wangyaominde/dsh-llm-grok-oauth.git"
+    "url": "git+https://github.com/Kaizin0226/dsh-supergrok.git"
   },
   "bugs": {
-    "url": "https://github.com/wangyaominde/dsh-llm-grok-oauth/issues"
+    "url": "https://github.com/Kaizin0226/dsh-supergrok/issues"
   },
-  "homepage": "https://github.com/wangyaominde/dsh-llm-grok-oauth#readme",
+  "homepage": "https://github.com/Kaizin0226/dsh-supergrok#readme",
   "author": "wangyaominde",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./hardening": "./supergrok-hardening.json",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/**/*.js",
-    "cordis.patch.yml"
+    "cordis.patch.yml",
+    "supergrok-hardening.json",
+    "npm-shrinkwrap.json"
   ],
   "dsh": {
     "client": {
@@ -47,15 +50,11 @@
       "patch": "./cordis.patch.yml"
     },
     "market": {
-      "displayName": "Grok OAuth",
-      "icon": "https://raw.githubusercontent.com/wangyaominde/dsh-llm-grok-oauth/main/docs/icon.png",
+      "displayName": "SuperGrok OAuth (Hardened)",
       "categories": [
         "llm",
         "provider",
         "oauth"
-      ],
-      "screenshots": [
-        "https://raw.githubusercontent.com/wangyaominde/dsh-llm-grok-oauth/main/docs/en/models-login.jpg"
       ]
     },
     "marketplace": {
@@ -64,22 +63,33 @@
       ],
       "requiresBuildApproval": false,
       "requiresRestart": true,
-      "manualSteps": false
+      "manualSteps": true
     }
   },
   "scripts": {
-    "test": "node test/smoke.mjs"
+    "test": "npm run test:provider && npm run test:preset && npm run test:contracts && npm run test:deployment",
+    "test:provider": "node test/run-tests.mjs",
+    "test:smoke": "node test/run-tests.mjs smoke",
+    "test:preset": "node presets/grok-optimized/test-preset.mjs",
+    "test:contracts": "node --test contracts/xai-dsh/test/catalog-snapshot.test.mjs contracts/xai-dsh/test/offline-source.test.mjs contracts/xai-dsh/test/rollout.test.mjs",
+    "test:deployment": "powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTreeSnapshot.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTransactions.ps1",
+    "safety": "node scripts/check-repository-safety.mjs",
+    "history-safety": "node scripts/check-git-history.mjs",
+    "canonical-hash": "node scripts/canonical-tree-hash.mjs",
+    "source-hash": "node scripts/source-tree-hash.mjs",
+    "pack:check": "npm pack --dry-run",
+    "verify": "npm run safety && npm run history-safety && npm test && npm run canonical-hash && npm run source-hash && npm run pack:check"
   },
   "license": "MIT",
   "dependencies": {
-    "undici": "^7.29.0"
+    "undici": "7.29.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "*",
-    "@deepseek-ai/dsh-credentials": "*",
-    "@deepseek-ai/dsh-llm": "*",
-    "@deepseek-ai/dsh-settings": "*",
-    "@deepseek-ai/schemastery": "*"
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-credentials": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -97,5 +107,15 @@
     "@deepseek-ai/schemastery": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-credentials": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1"
   }
 }
