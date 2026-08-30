@@ -117,7 +117,7 @@ if (-not (Test-OrdinaryDirectory -Path $fixedPresetParent)) {
 }
 Assert-ExactPath -Actual (Resolve-Path -LiteralPath $fixedPresetParent).Path -Expected $fixedPresetParent -Label 'Preset parent'
 
-$node = Get-Command node -CommandType Application -ErrorAction Stop
+$node = Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1
 & $node.Source (Join-Path $fixedCandidateRoot 'test-preset.mjs')
 if ($LASTEXITCODE -ne 0) {
     throw "Candidate/base verification failed with exit code $LASTEXITCODE"
