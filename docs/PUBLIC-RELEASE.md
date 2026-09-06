@@ -1,69 +1,79 @@
-# Public-release procedure / 公开流程
+# Release policy / 发行规范
 
 ## English
 
-Target: `suite-v0.7.0-preview.1`, source-only developer preview. Keep the name
-`dsh-supergrok` and prefer the existing repository. Unresolved historical privacy
-remnants mean staying private unless the owner explicitly accepts identified
-non-secret identity metadata exposure; record that decision outside Git.
-Credentials and private runtime material must still be excluded. Do not
-automatically recreate, migrate or rename the repository.
-Preparation and a draft release do not authorize visibility changes or publication;
-the owner separately approves the final concrete candidate.
+Developer previews distribute source and reproducible Windows build and
+installation tools. They are marked as prereleases and do not include
+precompiled assets or npm publication. Published versions and compatibility
+details are listed in the [release notes](RELEASE-NOTES.md).
 
-Before requesting that decision:
+### Release requirements
 
-1. Review reachable refs, author/committer identities, messages, files, links
-   and image metadata. Maintainer commits use
-   `38362307+Kaizin0226@users.noreply.github.com`; upstream identities stay intact.
-2. Review Actions metadata/logs, artifacts, old commit URLs, PR refs, releases
-   and other platform content. Resolve private remnants, including old commits
-   reachable by exact SHA. Keep sensitive evidence and cleanup requests outside
-   Git. [Rewriting does not clear all GitHub copies](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
-   Prepare a Support request if needed; submit only after owner confirmation.
-3. Recheck [service access](SERVICE-ACCESS.md), licenses and notices. Record
-   unresolved support boundaries accurately. Stop publication on a definite
-   implementation/terms conflict; a disclaimer is not a remedy.
-4. Require repository/history scans, package-content review and successful CI
-   for the exact candidate. Review advisories for its locked production graph.
-   Rebuild/retest changed code or installation inputs; offline success is not
-   live-service acceptance.
-5. Prepare a draft prerelease targeting the exact candidate and tag name
-   `suite-v0.7.0-preview.1`, with bilingual notes, no precompiled assets and no
-   npm publication. The owner-facing checklist identifies commit, CI and remaining
-   limits; retain it outside Git if it contains private evidence.
+- A release identifies an immutable source commit, a unique version tag and
+  the successful CI run for that commit. Published tags remain fixed;
+  source corrections use a new version. Release descriptions may be corrected
+  without moving their tags.
+- English and Simplified Chinese notes describe the supported component
+  combination, installation method, changes, completed validation and known
+  limitations. README translations share one file. Public text must be
+  self-contained and free of internal progress updates or drafting placeholders.
+- Source and history scans, package-content checks and relevant tests must
+  pass. Review security advisories for both production and development
+  dependencies. Changes to build or installation inputs require corresponding
+  build and installed-composition verification.
+- Preserve upstream authors, licenses and notices. Maintainer commits use
+  `38362307+Kaizin0226@users.noreply.github.com`. Reassess
+  [service access](SERVICE-ACCESS.md) when implementation or upstream terms
+  change; source licensing does not grant service authorization.
+- Releases and repository visibility changes require owner authorization for
+  their scope. Documentation changes do not themselves authorize unrelated
+  account, installation or visibility changes.
 
-After explicit authorization, change visibility only for the approved repository
-and candidate. Verify without authentication: README, source download, logs,
-links and old-SHA privacy checks. Enable private vulnerability reporting, verify
-its entry point and review available secret-scanning/push-protection settings.
-Publish the draft only after these checks pass. If exposure is found, stop release
-publication and report immediately; changing back to private cannot recall copies
-or forks. See [GitHub visibility effects](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
+### Privacy and distribution
 
-## 中文
+Credentials, account data, private runtime material and personal operational
+records are excluded from source, packages, documentation and public logs.
+Review files, commit metadata, links and image metadata, together with relevant
+GitHub references, Actions logs, artifacts and attachments. Keep sensitive
+review evidence and support requests outside Git.
 
-目标为 `suite-v0.7.0-preview.1` 源码开发者预览版。保留 `dsh-supergrok` 名称，优先原仓库。
-历史隐私残留未解决时继续私有，除非所有者明确接受已识别的非凭据身份元数据公开；该决定记录在 Git 外。
-凭据及私有运行资料仍须排除，不自动重建、迁移或改名。准备工作与 Release 草稿不授权改变
-可见性或正式发布；最终可审核候选由所有者单独确认。
+Git history rewriting does not remove all cached objects, logs or downloaded
+copies. Address newly discovered private-data exposure before further release
+distribution. See [GitHub's removal guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)
+and [visibility effects](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
 
-请求最终决定前：
+Verify public access to documentation, source downloads and release links.
+Maintain private vulnerability reporting, secret scanning and push protection;
+the reporting channel is documented in [SECURITY.md](../SECURITY.md). Offline
+test results and live-service validation must be reported separately.
 
-1. 检查可达引用、作者与提交者身份、提交信息、文件、链接及图片元数据。
-   维护者使用 `38362307+Kaizin0226@users.noreply.github.com`，保留上游身份。
-2. 检查 Actions 元数据与日志、产物、旧提交地址、PR 引用、Release 及其他平台内容。
-   解决私密残留，包括可按精确 SHA 读取的旧提交。证据与清理请求留在 Git 外。
-   [历史改写不能清除所有 GitHub 副本](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)。
-   必要时准备 Support 请求，所有者确认后再提交。
-3. 复核[服务接入](SERVICE-ACCESS.md)、许可及署名，准确记录未确定的支持边界。
-   发现实现与明确条款冲突时暂停发布，不能用免责声明解决。
-4. 候选须通过源码与历史扫描、打包内容检查和精确提交的 CI，并检查锁定生产依赖的安全公告。
-   改动代码或安装输入后重建、运行相关测试；离线成功不等于线上验收。
-5. 为精确候选准备标签名为 `suite-v0.7.0-preview.1` 的预发行草稿，中英双语说明，
-   不附预编译包、不发布 npm。审核清单列出提交、CI 和剩余限制；含私密证据时留在 Git 外。
+## 简体中文
 
-所有者明确授权后，只改变获批仓库和候选的可见性。用未登录视角核对 README、源码下载、日志、
-链接及旧 SHA 隐私检查；启用私密漏洞报告并验证入口，复核可用的密钥扫描与推送保护。
-全部通过才发布草稿。发现暴露时停止 Release 发布并立即报告；改回私有无法收回副本或 fork。
-参见 [GitHub 可见性影响](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)。
+开发者预览版提供源码及可复现的 Windows 构建、安装工具，标记为预发行，不附预编译包，
+不发布 npm。已发布版本与兼容信息见[发行说明](RELEASE-NOTES.md)。
+
+### 发行要求
+
+- 每个版本对应不可变源码提交、唯一版本标签及该提交成功的 CI。已发布标签保持固定，
+  源码修正使用新版本；发行说明可以修订，无需移动标签。
+- 中英文说明包括支持的组件组合、安装方法、变更、已完成验证和已知限制；README 两种语言
+  放在同一文件。对外内容须能独立理解，不夹带内部进度或起草占位内容。
+- 源码与历史扫描、包内容检查及相关测试须通过，同时检查生产和开发依赖的安全公告。
+  构建或安装输入变化时，执行相应构建及安装组合验证。
+- 保留上游作者、许可证及署名。维护者提交使用 `38362307+Kaizin0226@users.noreply.github.com`。
+  实现或上游条款变化时重新评估[服务接入](SERVICE-ACCESS.md)；源码许可不授予服务权限。
+- Release 发布和仓库可见性变更须在所有者授权范围内执行。文档修改本身不授权无关账户、
+  本机安装或可见性变更。
+
+### 隐私与分发
+
+源码、包、文档及公开日志不得包含凭据、账户数据、私有运行资料或个人操作记录。
+检查文件、提交元数据、链接及图片元数据，同时检查相关 GitHub 引用、Actions 日志、产物和附件。
+含敏感内容的核查证据及支持请求保存在 Git 外。
+
+Git 历史改写不能移除全部缓存对象、日志或已下载副本。发现新的私有数据暴露时，
+须在继续分发前处理。参见 [GitHub 清理说明](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)
+和[可见性变更影响](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)。
+
+核验文档、源码下载及发行链接的公开访问，维护私密漏洞报告、密钥扫描和推送保护。
+安全反馈入口见 [SECURITY.md](../SECURITY.md)。离线测试与真实服务验证须分别表述。

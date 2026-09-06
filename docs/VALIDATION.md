@@ -1,119 +1,89 @@
-# Validation and public-release checklist
+# Validation results and scope / 验证结果与范围
 
-English follows; [中文](#中文验证与公开前清单) is included below.
+## English
 
-The supported development and test runtime is Node.js 24 on Windows.
+The results below cover [suite-v0.7.0-preview.2](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2),
+source commit `021738367ccb7967a765cbd67722db124e18b152`, on Windows with Node.js 24.
+[CI run 34062689111](https://github.com/Kaizin0226/dsh-supergrok/actions/runs/34062689111)
+passed all 796 tests and the build, installation and rollback checks.
 
 | Check | Scope and result |
 | --- | --- |
-| Clean pinned DSH source build | Exact upstream tag commit exported, checked-in patch applied; host/client/web build passed |
-| Core regression tests | 613 tests passed across 33 files, including newly imported input preparation coverage |
-| Provider and scanner unit tests | 117 passed; mocked transport only |
-| Historical-image extensions | 39 passed, including real Cordis Loader composition |
+| Clean pinned DSH build | Exact upstream commit exported and repository patch applied; host/client/web build passed |
+| Core regression tests | 613 passed, including input preparation and session lifecycle |
+| Provider and scanner tests | 117 passed with mocked transport |
+| Historical-image extensions | 39 passed, including Cordis Loader composition |
 | Work-state extension | 16 passed against independently installed packages |
-| Installed web/headless | Actual profiles load the new provider; synthetic inference only |
-| Preset isolation | Default standard; recall once in each local mode; work-state once in Grok mode only |
-| Installer | Clean locked installation, no-op dry run, new-data guard, replacement and exact-receipt rollback passed |
-| Historical contract/deployment checks | 11 legacy contract tests and the PowerShell deployment regressions passed |
+| Historical contracts | 11 legacy contract tests passed |
+| Installed web/headless | Actual profiles loaded the provider; synthetic inference only |
+| Preset isolation | Standard default; one recall extension per local mode; work-state context only in Grok mode |
+| Installation and rollback | Clean locked installation, default dry run, new-data guard, replacement and exact-receipt rollback passed |
 
-The complete tests cover missing/stale usage, missing or invalid proxies, shared
-dispatcher ownership, failed dynamic catalog refresh, input-preparation notice
-replay, cancellation, repeated images, full request budgets and zero inference
-requests on rejection. Test runners remove inherited API credentials and use
-synthetic data. Provider tests block socket/fetch access; installed profile
-tests allow only their own local HTTP listener. They never log in or send a
-real model request. Build and npm dependency downloads are separate from tests.
+Tests cover missing or stale usage data, invalid or missing proxies, shared
+dispatcher ownership, failed catalog refresh, preparation-notice replay,
+cancellation, repeated images, request-budget boundaries and zero inference
+requests after rejection. Test runners remove inherited API credentials and
+use synthetic data. Provider tests block socket/fetch access; installed-profile
+tests allow only their own local HTTP listener. Source and dependency downloads
+are distinct from these offline tests.
 
-Registry dependency resolutions are checked into `build-locks/`. Locally built
-tarball integrity values are regenerated from the resulting bytes without
-changing registry versions. The portable bundle checks all package, lock and
-preset inputs before candidate installation and before replacement. Package
-checks are local; this project does not publish to npm.
+Registry dependencies are fixed in `build-locks/`. Build scripts regenerate
+integrity values for locally built tarballs without changing registry versions.
+The portable bundle verifies package, dependency-lock and preset inputs before
+installation or replacement. CI pins Actions to full commit SHAs, scans reachable
+Git history, builds the fixed public upstream source and tests the installed
+combination. A later commit requires its own applicable verification.
 
-CI pins Actions to full commit SHAs, checks full reachable Git history, builds
-from the fixed public upstream source and verifies the installed combination.
-Use the workflow run for the exact submitted commit as the hosted-CI result;
-local success alone does not establish that result.
+### Validation limits
 
-## Separate acceptance levels
+- **Offline validation:** the build, simulated service behavior and isolated
+  installed-profile loading described above.
+- **Production installation:** existing installations and data migration are
+  outside this validation. Compatibility must be checked for the actual
+  installation and component versions.
+- **Live services and UI:** real OAuth, live model and image inference, and the
+  production usage-panel UI have not been validated. No account screenshots or
+  live-service requests are included in these results.
 
-1. **Offline acceptance:** builds, contracts, simulated provider behavior and
-   isolated installed-profile loading described above.
-2. **Production loading:** must be checked separately against the user's
-   explicitly chosen local installation. This update does not modify it.
-3. **Online model/UI acceptance:** requires separate account authorization and
-   real service checks. No such requests or production screenshots are part of
-   this release. In particular, real image inference and production usage-panel
-   visual acceptance are not claimed by the offline tests.
+The [release policy](PUBLIC-RELEASE.md), [release notes](RELEASE-NOTES.md) and
+[service-access review](SERVICE-ACCESS.md) describe distribution requirements,
+version changes and service limitations.
 
-## Before changing repository visibility
+## 简体中文
 
-- Confirm source, docs, commit messages, author/committer identities and link
-  targets contain no private data. Repository and history scans cover both
-  Windows separators, common private POSIX paths and image metadata. Current
-  documentation contains no account screenshots.
-- Preserve upstream authors and copyrights. Maintainer commits use
-  `38362307+Kaizin0226@users.noreply.github.com`.
-- Inspect GitHub-side old commit links, pull-request refs, Actions logs and
-  artifacts, releases, attachments and other cached content. Rewriting branch
-  history does **not** erase all GitHub copies or old Actions logs. Resolve
-  relevant remnants before making the repository public.
-- Recheck the exact branch heads before any leased history update. If the
-  remote has changed, stop instead of overwriting another update.
-- Review current service access/terms and third-party notices. Source licensing
-  does not confer subscription entitlement or service authorization.
-- Make the visibility decision separately. This update keeps the repository
-  private and leaves optional Bridge trust configuration to a separate action.
-
-The preview procedure is in [PUBLIC-RELEASE.md](PUBLIC-RELEASE.md), with
-[bilingual release notes](RELEASE-NOTES.md) and a dated [service-access review](SERVICE-ACCESS.md).
-Any GitHub-side cleanup outcome belongs in the private owner-facing checklist,
-not in reusable source documentation. A draft release is not public acceptance.
-
-## 中文：验证与公开前清单
-
-支持的开发和测试环境是 Windows＋Node.js 24。
+以下结果对应 Windows＋Node.js 24 环境中的
+[suite-v0.7.0-preview.2](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2)，
+源码提交为 `021738367ccb7967a765cbd67722db124e18b152`。
+[CI 34062689111](https://github.com/Kaizin0226/dsh-supergrok/actions/runs/34062689111)
+的 796 项测试及构建、安装和回滚检查全部通过。
 
 | 检查 | 范围与结果 |
 | --- | --- |
-| 固定 DSH 源码干净构建 | 导出精确标签提交、应用检入补丁，host/client/web 构建通过 |
-| 核心回归 | 33 个文件共 613 项通过，包含新导入的输入准备测试 |
-| Provider 与扫描单元测试 | 117 项通过，仅使用模拟传输 |
-| 历史图片扩展 | 39 项通过，含真实 Cordis Loader 组合 |
+| 固定 DSH 干净构建 | 导出精确上游提交并应用仓库补丁；host/client/web 构建通过 |
+| 核心回归测试 | 613 项通过，覆盖输入准备和会话生命周期 |
+| Provider 与扫描测试 | 117 项通过，使用模拟传输 |
+| 历史图片扩展 | 39 项通过，包含 Cordis Loader 组合 |
 | 工作状态扩展 | 独立安装包上 16 项通过 |
-| 安装后的 web/headless | 真实 profile 加载新 provider，仅合成推理 |
-| 预设隔离 | 默认 standard，两种本地模式各一次召回，仅 Grok 模式一次工作状态 |
-| 安装工具 | 干净锁定安装、无修改 dry-run、新数据保护、替换及精确回执回滚通过 |
-| 历史合约与部署 | 11 项历史合约及 PowerShell 部署回归通过 |
+| 历史合约 | 11 项历史合约测试通过 |
+| 安装后的 web/headless | 真实 profile 加载 provider，仅执行合成推理 |
+| 预设隔离 | 默认 standard；两种本地模式各一次召回，仅 Grok 模式挂载工作状态 |
+| 安装与回滚 | 干净锁定安装、默认 dry-run、新数据保护、替换及精确回执回滚通过 |
 
-测试覆盖额度缺失／过期、代理缺失／非法、共享 dispatcher 归属、动态目录刷新失败、输入准备提示回放、
-取消、重复图片、完整请求预算及拒绝时零推理请求。测试清除继承的 API 凭据并使用合成数据。
-Provider 测试阻止 socket/fetch 网络；安装 profile 测试仅允许自己的本地 HTTP 服务，
-不真实登录、不调用模型。构建和 npm 下载与这些测试分开。
+测试覆盖额度缺失或过期、代理缺失或非法、共享 dispatcher 归属、目录刷新失败、
+准备提示回放、取消、重复图片、请求预算边界及拒绝后的零推理请求。
+测试清除继承的 API 凭据并使用合成数据；provider 测试阻止 socket/fetch 网络，
+安装 profile 测试仅允许自己的本地 HTTP 服务。源码及依赖下载与这些离线测试相互独立。
 
-注册表依赖解析锁在 `build-locks/`，本地构建包的完整性值按实际字节重新生成，但不改变注册表版本。
-组合安装在候选安装前和替换前检查所有包、锁和 preset 输入。打包检查只在本地，不发布 npm。
-CI 的 Actions 固定完整 SHA，检查全部可达 Git 历史，从固定公开上游源码构建并验证真实安装组合。
-托管 CI 结论必须来自精确提交的运行，不能用本地成功代替。
+注册表依赖固定在 `build-locks/`。构建脚本按实际字节重新生成本地包完整性值，不改变注册表版本。
+安装组合在安装或替换前验证包、依赖锁及 preset 输入。CI 的 Actions 固定完整 SHA，
+扫描可达 Git 历史，从固定公开上游源码构建并测试实际安装组合。后续提交须进行各自适用的验证。
 
-### 三种验收层级
+### 验证限制
 
-1. **离线验收**：上述构建、合约、模拟 provider 行为和隔离安装加载。
-2. **生产加载**：须针对用户显式选择的本机安装单独检查，本更新不修改它。
-3. **线上模型／UI 验收**：须单独账户授权和真实服务检查，本发行不包含这些请求或生产截图。
-   尤其不能用离线测试宣称真实图片推理或生产额度面板视觉验收通过。
+- **离线验证**：上述构建、模拟服务行为及隔离安装加载。
+- **生产安装**：既有安装和数据迁移不在本验证范围内，兼容性须按实际安装及组件版本确认。
+- **真实服务与界面**：未验证真实 OAuth、模型和图片推理及生产额度面板；这些结果不包含
+  账户截图或真实服务请求。
 
-### 改变可见性前
-
-- 检查源码、文档、提交信息、作者／提交者、链接目标无私有数据。扫描覆盖 Windows 两种分隔符、
-  常见私密 POSIX 路径与图片元数据；当前文档不含账户截图。
-- 保留上游作者与版权，维护者提交使用 `38362307+Kaizin0226@users.noreply.github.com`。
-- 检查旧提交地址、PR 引用、Actions 日志与产物、Release、附件及缓存；历史改写不清除全部平台副本，
-  解决相关残留后才公开。
-- 涉及带 lease 的历史更新前重查精确远端头，发生变化就停止，不覆盖其他更新。
-- 复核当前服务条款和第三方说明；源码许可不授予订阅或服务权限。
-- 可见性单独决定，准备阶段保持私有；可选 Bridge 信任配置也单独处理。
-
-完整步骤见[公开流程](PUBLIC-RELEASE.md)、[双语首发说明](RELEASE-NOTES.md)和带日期的
-[接入评估](SERVICE-ACCESS.md)。GitHub 清理实况记录在 Git 外的私有审核清单，不进入通用源码文档。
-Release 草稿不代表公开验收。
+[发行规范](PUBLIC-RELEASE.md)、[发行说明](RELEASE-NOTES.md)和
+[服务接入评估](SERVICE-ACCESS.md)分别说明分发要求、版本变化及服务限制。

@@ -32,11 +32,11 @@ has no alternative-provider fallback. Its live catalog reflects account
 availability, not a legal assessment. Eligibility and protocols may change
 independently of the pinned source.
 
-Recheck these sources before visibility changes. If a definite conflict with
-the implementation is identified, keep the repository private and present the
-specific evidence to the owner. Do not silently switch to API-key access or
-claim official endorsement. No real login or model request was made for this
-review; online acceptance is not claimed for the preview.
+Reassess service compatibility when the implementation or applicable terms
+change. A confirmed conflict requires resolution before further distribution
+of the affected integration. API-key access is not an automatic fallback, and
+the project does not claim official endorsement. This review involved no real
+login or model request; the preview has no live-service validation result.
 
 ## 中文
 
@@ -59,5 +59,6 @@ review; online acceptance is not claimed for the preview.
 也不把必填本地代理视为绕过服务限制的许可。provider 不回退到其他服务商。
 实时目录反映账户可用性，不是法律判断；资格和协议可能独立于固定源码变化。
 
-改变可见性前重新核对来源。如发现实现与明确限制冲突，保持私有并向所有者报告具体依据；
-不静默切换 API key 路由，不宣称官方背书。本次核对没有真实登录或模型请求，预览版不宣称线上验收完成。
+实现或适用条款变化时重新评估服务兼容性。确认存在冲突时，须在继续分发受影响集成前解决。
+API key 接入不是自动回退路径，本项目不宣称官方背书。核对未执行真实登录或模型请求，
+预览版没有真实服务验证结论。

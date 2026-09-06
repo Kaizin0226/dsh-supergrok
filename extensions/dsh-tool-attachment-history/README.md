@@ -38,7 +38,7 @@ The stable tool schema is present whenever the plugin is composed. A call append
 
 The stable schema preserves its request prefix. Tool-call history grows append-only, while a recalled native image changes the following provider request after the reusable prefix.
 
-### Known Limitations and Deferred Work
+### Known limitations
 
 - Recall addresses images removed from the current surface by compaction or pruning; it does not override a provider's single-request image limits.
 - The tool does not switch models or providers and has no text-only fallback.
@@ -80,7 +80,7 @@ compaction 隐藏较早的已授权图片后，模型会看到有界的 newest-f
 
 稳定 schema 会保持请求前缀。工具调用历史仅追加增长，召回的原生图片会在可复用前缀之后改变下一次 provider 请求。
 
-### 已知限制与待完成工作
+### 已知限制
 
 - 召回解决由 compaction 或 pruning 从当前 surface 移除的图片；它不会绕过 provider 的单次请求图片限制。
 - 工具不会切换模型或 provider，也没有 text-only fallback。

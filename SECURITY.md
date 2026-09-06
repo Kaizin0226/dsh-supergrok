@@ -22,13 +22,10 @@ extension development. Use the corrected preview for development; do not enable
 Vitest UI, Browser Mode or a network-exposed API on the initial preview.
 The documented test commands use run mode and the installed runtime excludes Vitest.
 
-After public release, use [Report a vulnerability](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new).
-Administrators must enable private vulnerability reporting when making the
-repository public and verify this link before announcing the release. The
-channel is not yet claimed to be active while the repository is private.
-Until available, use an existing private conversation with the owner. If you
-have none, open an issue requesting private contact **without vulnerability
-details**. Never disclose vulnerabilities in public issues.
+Submit vulnerabilities through [Report a vulnerability](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new).
+Private reporting is enabled and requires a GitHub login. Do not disclose
+vulnerability details in public issues. If the reporting channel is unavailable,
+request private contact without including vulnerability details.
 
 Provide affected versions, expected/actual behavior, impact and a minimal
 synthetic reproduction. Do not send production logs or account data. Preserve
@@ -55,10 +52,9 @@ Issue 不得包含凭据或生产证据。
 开发时请使用修正后的预览版；不要在首版上启用 Vitest UI、Browser Mode 或向网络开放 API。
 文档中的测试命令使用 run 模式，安装后的运行环境不包含 Vitest。
 
-公开后使用 [Report a vulnerability／私密漏洞报告](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new)。
-管理员须在公开时启用功能，并在宣布发布前验证入口；仓库仍私有时不宣称该入口已启用。
-启用前使用与所有者已有的私密沟通渠道；若没有，可在 Issue 仅请求私密联系方式，
-**不要披露漏洞细节**。漏洞不得发到公开 Issue。
+通过 [Report a vulnerability／私密漏洞报告](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new)提交漏洞。
+私密报告功能已启用，需要登录 GitHub。不得在公开 Issue 中披露漏洞细节。
+若报告入口不可用，可请求私密联系方式，但不要附带漏洞详情。
 
 请提供受影响版本、预期与实际行为、影响和最小合成复现，不发送生产日志或账户数据。
 保留上游身份；维护者使用文档指定的 GitHub noreply 邮箱。依赖扫描无已知漏洞不代表服务已授权。

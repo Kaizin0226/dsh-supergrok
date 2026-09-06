@@ -57,7 +57,7 @@ limits, omission counts, one-shot deduplication, Unicode handling, the real
 Cordis Loader/SystemPrompt composition lifecycle, exact package versions and
 the real DSH todo reset at `turn/start`.
 
-This staging package does not install or restart production by itself.
+This plugin does not install or restart DSH.
 
 The five suites use full snapshots, inherited-prefix counts and the actual
 `agentPreset` projection. `lib` is maintained source for this package, not

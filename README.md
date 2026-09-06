@@ -76,7 +76,7 @@ installation download public dependencies; offline tests make no real OAuth,
 model-catalog or inference requests. Installed web/headless composition tests
 exercise actual DSH loading with a synthetic adapter and a fixture-owned local
 HTTP listener. Passing them does not establish production UI or live model
-acceptance. See [validation and public-release checklist](docs/VALIDATION.md).
+acceptance. See [validation results and scope](docs/VALIDATION.md).
 
 ### Boundaries
 
@@ -90,7 +90,7 @@ supported preview workflow. No availability or production-support promise is mad
 DSH owns credentials, sessions, permission enforcement and native tools. Bridge
 is optional: configure its local trust using the hashes of the installed
 release; an older fixed trust hash does not authorize this package. This
-project does not edit another Bridge repository or the user's trust settings.
+installer does not manage Bridge trust settings.
 The [old xAI API contracts](contracts/xai-dsh/README.md) are historical reference
 and are excluded from the default build/install route.
 
@@ -102,7 +102,7 @@ subscription access or service authorization. This is an independent integration
 
 See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md),
 [preview release notes](docs/RELEASE-NOTES.md) and the
-[public-release procedure](docs/PUBLIC-RELEASE.md), available in English and
+[release policy](docs/PUBLIC-RELEASE.md), available in English and
 Simplified Chinese. Issues should contain minimal synthetic reproductions only;
 report vulnerabilities privately. Maintenance is best-effort, without a response
 time or compatibility guarantee beyond the documented tested combination.
@@ -158,9 +158,9 @@ time or compatibility guarantee beyond the documented tested combination.
 
 测试只使用合成凭据和模拟服务。源码及依赖下载需要网络，离线测试不请求真实 OAuth、模型目录或模型。
 组合测试在独立安装中加载 web/headless，并使用合成 adapter 和自有本地 HTTP 服务。
-离线通过、生产加载、线上模型验收是不同结论；详见 [验证及公开前清单](docs/VALIDATION.md)。
+离线测试、生产加载和真实模型验证覆盖不同范围；详见 [验证结果与范围](docs/VALIDATION.md)。
 
-Bridge 是可选配套，需要按实际安装包哈希另行配置本地信任；此次不修改 Bridge 仓库和信任设置。
+Bridge 是可选配套，需要按实际安装包哈希配置本地信任；安装工具不管理 Bridge 信任设置。
 [旧 xAI API 合约](contracts/xai-dsh/README.md) 仅作历史参考，不进入默认安装流程。
 
 原 [MIT 版权声明](LICENSE) 保留，自有新增内容沿用 MIT；适用的 Grok Build 衍生内容保留
@@ -170,12 +170,12 @@ Bridge 是可选配套，需要按实际安装包哈希另行配置本地信任�
 ### 接入边界与已知限制
 
 登录前请阅读[服务接入评估](docs/SERVICE-ACCESS.md)。源码许可及登录成功均不构成第三方服务接入授权。
-上游协议与账户资格可能变化。本次发行尚未完成真实 OAuth、模型推理、图片推理及生产额度面板的线上验收。
+上游协议与账户资格可能变化。本预览版未验证真实 OAuth、模型推理、图片推理及生产额度面板。
 macOS／Linux 和既有数据迁移不属于首版支持流程；不承诺持续可用或生产支持。
 
 ### 贡献与反馈
 
 请参阅[贡献指南](CONTRIBUTING.md)、[私密安全反馈](SECURITY.md)、[预览版说明](docs/RELEASE-NOTES.md)
-和[公开流程](docs/PUBLIC-RELEASE.md)，相关指南均提供中英文。
+和[发行规范](docs/PUBLIC-RELEASE.md)，相关指南均提供中英文。
 普通 Issue 只提交最小合成复现，漏洞通过私密渠道反馈。维护采取尽力而为原则，
 不承诺响应时间，也不扩大到兼容表之外的组合。

@@ -24,7 +24,7 @@ Zero directly. Consumers decide whether an authorized occurrence contributes mod
 
 Independent by itself. A consumer that publishes a changed hidden-image snapshot can invalidate its own affected runtime-context suffix.
 
-### Known Limitations and Deferred Work
+### Known limitations
 
 - The collector covers durable raster `ImageBlock` references only; generic files, audio, and video need separate typed occurrence contracts.
 - It restores images hidden by surface replacement; it does not solve temporary per-request image offload.
@@ -52,7 +52,7 @@ Independent by itself. A consumer that publishes a changed hidden-image snapshot
 
 该包自身与 KV Cache 独立。消费方发布变化的隐藏图片快照时，可能使自身受影响的运行时上下文后缀失效。
 
-### 已知限制与待完成工作
+### 已知限制
 
 - 收集器仅覆盖持久 raster `ImageBlock` 引用；通用文件、音频和视频需要各自独立的 typed occurrence 契约。
 - 它恢复由 surface replacement 隐藏的图片，不解决单次请求图片 offload。
