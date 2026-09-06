@@ -1,9 +1,13 @@
 {
-  "name": "dsh-grok-optimized-preset-candidate",
-  "version": "0.1.0",
+  "name": "grok-optimized-preset",
+  "version": "0.8.0",
+  "description": "Versioned distribution payload for the DSH grok-optimized user preset",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "node ./test-preset.mjs"
-  }
+  "files": [
+    "agent.cordis.yml",
+    "preset.yml",
+    "base-lock.json",
+    "PROVENANCE.md"
+  ],
+  "license": "MIT"
 }

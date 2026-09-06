@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 6,
+  "presetId": "grok-optimized",
+  "presetVersion": "0.8.0",
+  "upstream": {
+    "version": "0.1.2-rc.1",
+    "standardSha256": "f18dd942686aa71f43ffc4fd328a712f79af113fb67a35b54cb6de4fc3b84bda"
+  },
+  "distribution": {
+    "version": "0.1.2-rc.1.grok.2",
+    "standardSha256": "1341472beb02576ad490ce59a9f7ecdc85131f20314516a56b18f8cd4639fe15",
+    "localExtensions": [
+      "dsh-tool-attachment-history@1.1.0"
+    ]
+  },
+  "presetOnlyExtensions": [
+    "dsh-grok-work-state-context@1.1.0"
+  ],
+  "personaReference": "xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9",
+  "payload": {
+    "agent.cordis.yml": "96c021f6789b4f0f364bfd246f7f6837e5f06a8794196a571540f0a22e546c0f",
+    "preset.yml": "f98e9b4a3442457122b6d980e7c382e35221df43879aab0f21d7612ed79c5382"
+  },
+  "rollout": {
+    "id": "grok-optimized",
+    "live": "keep mounted composition",
+    "cold": "current installed composition",
+    "rollback": "restore prior composition without rewriting history"
+  }
+}

@@ -39,13 +39,15 @@ function treeDigest(root, names) {
 const preset = normalize(readFileSync(join(candidateRoot, 'preset.yml'), 'utf8'));
 const agent = normalize(readFileSync(join(candidateRoot, 'agent.cordis.yml'), 'utf8'));
 assert.match(preset, /^name: DSH · Grok 优化模式$/m);
-assert.match(preset, /仅优化自主推进、真实工具、验证闭环和简洁沟通行为/);
-assert.match(agent, /你是 DSH Agent，当前由 \{\{model\}\} 提供推理/);
-assert.match(agent, /目标和权限边界明确后自主推进/);
-assert.match(agent, /只使用当前工具目录中真实存在的工具/);
-assert.match(agent, /完成前运行与风险相称的检查/);
-assert.match(agent, /结论先行，沟通简洁/);
-assert.match(agent, /只使用本 preset 已提供且未禁用的 DSH 原生子 Agent/);
+assert.match(preset, /通用历史图片召回/);
+for (const discipline of ['诊断负责查明原因', '权限允许不等于用户授权', '当前提供的专用工具',
+  '真实任务句柄', '不表示任务已经结束', '用户明确要求委派时', '名单不等于当前任务的外发授权',
+  '父会话必须复核', '浏览器工具可用时', '用户指定的语言、格式和详细度', '先阅读工具输出', '不得根据文件名']) {
+  assert.ok(agent.includes(discipline), `Missing task discipline: ${discipline}`);
+}
+assert.match(agent, /modelSelectionSettings: true/);
+assert.equal((agent.match(/^- id: tool-attachment-history$/gm) ?? []).length, 1);
+assert.equal((agent.match(/^- id: grok-work-state-context$/gm) ?? []).length, 1);
 assert.doesNotMatch(agent, /^\s*complete\s*:/m, 'host governance must remain visible');
 
 const personaEnd = agent.indexOf('\n- id: agent-instructions');
