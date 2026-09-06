@@ -24,12 +24,15 @@ test('runtime source has no CLI credential, shell opener, curl, API-key fallback
   ]) {
     assert.doesNotMatch(source, forbidden);
   }
+  assert.doesNotMatch(source, /image attachment omitted/);
+  assert.doesNotMatch(source, /\bgrok-\d+(?:\.\d+)+(?:[-._][a-z0-9]+)*\b/i);
+  assert.doesNotMatch(source, /DEFAULT_MODEL|DEFAULT_REASONING_EFFORT|VALIDATED_IMAGE_MODEL/);
   assert.doesNotMatch(await readFile(join(root, 'lib', 'net.js'), 'utf8'), /return\s+(?:globalThis\.)?fetch\s*\(/);
 });
 
-test('all runtime JavaScript parses with XAI_API_KEY absent', async () => {
+test('all runtime JavaScript parses with XAI_API_KEY explicitly empty', async () => {
   const environment = { ...process.env };
-  delete environment.XAI_API_KEY;
+  environment.XAI_API_KEY = '';
   const names = (await readdir(join(root, 'lib'))).filter((name) => name.endsWith('.js'));
   for (const name of names) {
     const result = spawnSync(process.execPath, ['--check', join(root, 'lib', name)], {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import test from 'node:test';
 import {
   assertAllowedOutboundUrl,
@@ -58,7 +59,7 @@ test('JSON body reader cancels on timeout, overflow, and parse failure', async (
 test('one dispatcher is reused and redirects are rejected', async () => {
   const dispatcher = { marker: 'pinned' };
   const calls = [];
-  const transport = createPinnedTransport({
+  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:7897',
     runtimeFactory: async () => ({
       dispatcher,
       fetchImpl: async (url, init) => {
@@ -83,7 +84,7 @@ test('one dispatcher is reused and redirects are rejected', async () => {
 
 test('proxy failure has no direct/curl retry and does not expose secret form values', async () => {
   let attempts = 0;
-  const transport = createPinnedTransport({
+  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:7897',
     runtimeFactory: async () => ({
       dispatcher: {},
       fetchImpl: async () => {
@@ -116,11 +117,11 @@ test('OAuth form transport sends truthful fixed client identity headers', async 
   await postFormJson('/oauth2/device/code', { client_id: 'public', referrer: 'dsh-supergrok-oauth-hardened' }, 1000, transport);
   assert.equal(seen.purpose, 'oauth');
   assert.equal(seen.init.headers['x-grok-client-surface'], 'ui');
-  assert.equal(seen.init.headers['x-grok-client-version'], '0.3.0-hardened.5');
+  assert.equal(seen.init.headers['x-grok-client-version'], '0.7.0-hardened.1');
   assert.equal(seen.init.headers['x-grok-client-identifier'], 'dsh-supergrok-oauth-hardened');
   assert.equal(
     seen.init.headers['user-agent'],
-    'deepseek-harness/0.1.1-rc.2 (+https://github.com/deepseek-ai/deepseek-harness)',
+    `deepseek-harness/${createRequire(import.meta.url)('@deepseek-ai/dsh-llm/package.json').version} (+https://github.com/deepseek-ai/deepseek-harness)`,
   );
   assert.match(seen.init.body, /referrer=dsh-supergrok-oauth-hardened/);
 });

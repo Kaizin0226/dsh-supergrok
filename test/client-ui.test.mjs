@@ -32,7 +32,7 @@ function loadClientTestContract() {
 const contract = loadClientTestContract();
 
 function directoryResponse(groups) {
-  return { result: { ok: true, value: { groups, failures: [] } } };
+  return { ok: true, value: { groups, failures: [] } };
 }
 
 test('client directory keeps every SuperGrok model and its owned efforts in one exact provider group', () => {
@@ -70,7 +70,7 @@ test('client directory keeps every SuperGrok model and its owned efforts in one 
 test('client directory fails closed on missing, duplicate, or unsafe SuperGrok groups without echoing provider text', () => {
   const secret = 'provider-secret-must-not-surface';
   const cases = [
-    { value: { result: { ok: false, error: { message: secret } } }, code: 'directory_unavailable' },
+    { value: { ok: false, error: { message: secret } }, code: 'directory_unavailable' },
     { value: directoryResponse([]), code: 'directory_unavailable' },
     {
       value: directoryResponse([
@@ -288,7 +288,7 @@ test('management client is local-RPC/read-only for catalog and restores the stoc
   const scopeWrites = Array.from(clientSource.matchAll(/scope\.(?:set|unset)\(\s*["']([^"']+)/g), (match) => match[1]);
   const statusPollMarker = clientSource.indexOf('ui-llm-grok-oauth: status poll');
   const statusPoll = clientSource.slice(clientSource.lastIndexOf('ctx.effect(() => {', statusPollMarker), statusPollMarker);
-  assert.match(clientSource, /api\.llm\.models\(\{\}\)/);
+  assert.match(clientSource, /ctx\.remote\.session\.modelCatalog\(\)/);
   assert.match(clientSource, /stockEdit\.style\.display = "none"/);
   assert.match(clientSource, /button\.style\.display = display/);
   assert.match(clientSource, /ctx\.remote\.\$on\("settings\/document-updated", refreshSettings\)/);
@@ -300,6 +300,6 @@ test('management client is local-RPC/read-only for catalog and restores the stoc
   assert.doesNotMatch(clientSource, /api\.sessions\.selectModel/);
   assert.doesNotMatch(clientSource, /\/responses|\/chat\/completions|api\.x\.ai/);
   assert.doesNotMatch(clientSource, /setInterval\s*\(\s*loadDirectory/);
-  assert.doesNotMatch(statusPoll, /loadDirectory|directoryLoader|api\.llm\.models/);
+  assert.doesNotMatch(statusPoll, /loadDirectory|directoryLoader|modelCatalog/);
   assert.match(runnerSource, /join\(testDirectory, 'client-ui\.test\.mjs'\)/);
 });

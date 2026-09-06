@@ -8,35 +8,39 @@ import { sourceTreeHash } from '../scripts/source-tree-hash.mjs';
 import {
   ALLOWED_ORIGINS,
   CATALOG_SYNC_SECONDS,
-  DEFAULT_MODEL,
-  DEFAULT_REASONING_EFFORT,
+  IMAGE_MAX_ENCODED_BYTES,
+  IMAGE_MAX_PIXELS,
+  IMAGE_MAX_SIDE,
+  IMAGE_MIN_PIXELS,
+  IMAGE_MIN_SIDE,
+  LIVE_CANARY_MAX_INFERENCES_ENV,
   PERMISSION_MODE,
   PLUGIN_VERSION,
   PROTOCOL_PROVENANCE,
   PROVIDER,
-  PROXY_URL,
 } from '../lib/constants.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 test('hardening manifest matches runtime constants and canonical file set', async () => {
   const manifest = JSON.parse(await readFile(join(root, 'supergrok-hardening.json'), 'utf8'));
-  assert.equal(manifest.schemaVersion, 2);
+  assert.equal(manifest.schemaVersion, 3);
   assert.equal(manifest.provider, PROVIDER);
-  assert.equal(manifest.defaultModel, DEFAULT_MODEL);
-  assert.equal(manifest.defaultReasoningEffort, DEFAULT_REASONING_EFFORT);
+  assert.equal(manifest.defaultModel, undefined);
+  assert.equal(manifest.defaultReasoningEffort, undefined);
   assert.equal(manifest.permission, PERMISSION_MODE);
   assert.equal(manifest.pluginVersion, PLUGIN_VERSION);
   assert.deepEqual(manifest.settingsUi, {
     providerGroup: PROVIDER,
-    catalogRpc: 'llm.models',
+    catalogRpc: 'session.modelCatalog',
     liveCatalogReadOnly: true,
     editableFields: ['modelsRefreshSeconds'],
     otherProviderFailuresExcluded: true,
     polling: false,
   });
   assert.deepEqual(manifest.allowedOrigins, ALLOWED_ORIGINS);
-  assert.equal(manifest.proxyUrl, PROXY_URL);
+  assert.equal(manifest.proxyUrl, undefined);
+  assert.deepEqual(manifest.proxyPolicy, { setting: 'proxyUrl', required: true, protocol: 'http:', hosts: ['127.0.0.1', '[::1]'], credentials: false, directFallback: false, environmentDiscovery: false, changeRequiresRestart: true });
   assert.equal(manifest.acceptanceEmptyToolCatalogGuard, true);
   assert.equal(manifest.acceptanceOAuthNetworkDisabled, true);
   assert.equal(manifest.acceptanceSingleInferenceLatch, true);
@@ -51,9 +55,21 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
   assert.equal(manifest.dynamicAccountCatalog.backgroundSyncSeconds, CATALOG_SYNC_SECONDS);
   assert.equal(manifest.dynamicAccountCatalog.overlapAllowed, false);
   assert.equal(manifest.dynamicAccountCatalog.serveStaleOnRefreshFailure, false);
-  assert.equal(manifest.dynamicAccountCatalog.revalidateBeforeInference, true);
-  assert.equal(manifest.dynamicAccountCatalog.forceFreshCatalogBeforeInference, true);
+  assert.equal(manifest.dynamicAccountCatalog.revalidateBeforeTurn, true);
+  assert.equal(manifest.dynamicAccountCatalog.turnScopedPreparePreflight, 'force-fresh-on-new-turn');
+  assert.equal(manifest.dynamicAccountCatalog.forceFreshCatalogPerInference, false);
+  assert.deepEqual(manifest.dynamicAccountCatalog.preparedDispatchContext, {
+    fields: ['sessionId', 'turn'],
+    turnType: 'positive-safe-integer',
+    sameTurnReuse: true,
+    crossTurnRefresh: true,
+    preparedModelInfoAndStreamSameRevision: true,
+    backgroundRefreshCannotReplaceFrozenTurnSnapshot: true,
+    generationDriftInsideTurn: 'fail-closed',
+    missingContextForTurnScopedDispatch: 'fail-closed',
+  });
   assert.equal(manifest.dynamicAccountCatalog.requireHeaderBodyModelMatch, true);
+  assert.equal(manifest.dynamicAccountCatalog.catalogRequestCarriesModelOverride, false);
   assert.equal(manifest.dynamicAccountCatalog.rejectConflictingAliases, true);
   assert.equal(manifest.dynamicAccountCatalog.reasoningEffortDefaultFlagPolicy, 'unique-and-consistent');
   assert.equal(manifest.dynamicAccountCatalog.selectorEffortMapsToCanonicalWireValue, true);
@@ -61,9 +77,81 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
   assert.equal(manifest.dynamicAccountCatalog.abortInFlightRefreshOnDispose, true);
   assert.equal(manifest.dynamicAccountCatalog.generationIsolatedOnDispose, true);
   assert.deepEqual(manifest.dynamicAccountCatalog.allowedBackends, ['chat', 'chat_completions', 'responses']);
+  assert.equal(manifest.dynamicAccountCatalog.missingOrUnknownBackendPolicy, 'exclude-entry');
+  assert.deepEqual(manifest.dynamicAccountCatalog.catalogRevision, {
+    format: 'sha256:<lowercase-hex>',
+    canonicalization: 'normalized-public-model-facts-bytewise-id-order-v1',
+    credentialsExcluded: true,
+    tokensExcluded: true,
+    diagnosticsExcluded: true,
+    timestampsExcluded: true,
+  });
+  assert.deepEqual(manifest.selection, {
+    source: 'authenticated-live-account-catalog',
+    fixedModel: false,
+    fixedReasoningEffort: false,
+    reasoningEffortDefaultSource: 'same-live-model-entry-only',
+    authoritativeModelDefaultAvailable: false,
+    catalogOrderSemantics: 'display-only-not-recency',
+    modelNameVersionOrdering: false,
+    releaseDateOrdering: false,
+    ambiguousAutomaticModelSelection: 'fail-closed',
+    legacyModelAndReasoningSettingsIgnored: true,
+  });
+  assert.deepEqual(manifest.multimodalInput, {
+    liveCatalogAuthoritative: true,
+    explicitCatalogModalitiesTakePriority: true,
+    missingModalitiesPolicy: 'grok-build-provider-backend-compatibility-overlay',
+    modelNameInference: false,
+    compatibilityOverlay: {
+      version: 1,
+      scope: 'authenticated-grok-oauth-live-entry-with-recognized-backend-and-omitted-modalities',
+      inputModalities: ['text', 'image'],
+      explicitTextOnlyWins: true,
+      modelVersionIndependent: true,
+      protocolReference: 'xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571',
+    },
+    allowedModalities: ['text', 'image'],
+    attachmentService: '@deepseek-ai/dsh-attachment',
+    requestProjection: 'readImageRequest',
+    admissionOwner: 'DSH attachment service',
+    limitsKind: 'Grok Build provider-request compatibility',
+    allowedRequestMediaTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+    maxEncodedBytes: IMAGE_MAX_ENCODED_BYTES,
+    maxPixels: IMAGE_MAX_PIXELS,
+    maxSide: IMAGE_MAX_SIDE,
+    minPixels: IMAGE_MIN_PIXELS,
+    minSide: IMAGE_MIN_SIDE,
+    allowedImageRoles: ['user', 'nested-tool-result'],
+    responsesImageType: 'input_image',
+    chatImageType: 'image_url',
+    responsesToolResultImageEncoding: 'function_call_output.output',
+    chatToolResultImageEncoding: 'role-tool-content',
+    silentOmission: false,
+    inputPreparationOwner: 'DSH host logged plugin notice',
+    maxRequestBodyBytes: 40000000,
+    requestBudgetKind: 'local conservative serialized UTF-8 budget, not official limit',
+  });
+  assert.equal(manifest.validatedImageModels, undefined);
+  assert.deepEqual(manifest.liveCanary, {
+    environment: LIVE_CANARY_MAX_INFERENCES_ENV,
+    allowedInferenceBudgets: [1, 2],
+    claimsBeforeNetwork: true,
+    processWideInferenceBudget: true,
+    catalogNetworkRequestBudget: 1,
+    catalogV2FallbackDisabled: true,
+    catalog401ReplayDisabled: true,
+    inference401ReplayDisabled: true,
+    backgroundCatalogSyncDisabled: true,
+    failedOrExpiredCatalogReuse: false,
+    legacyAcceptanceMutuallyExclusive: true,
+  });
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   assert.deepEqual(manifest.hostPeerVersions, pkg.peerDependencies);
-  assert.deepEqual(manifest.hostPeerVersions, pkg.devDependencies);
+  assert.deepEqual(manifest.hostPeerVersions, {
+    ...pkg.devDependencies,
+    '@deepseek-ai/dsh-llm': pkg.peerDependencies['@deepseek-ai/dsh-llm'],
+  });
   assert.equal(manifest.model, undefined);
   assert.equal(manifest.reasoningEffort, undefined);
   assert.equal(manifest.version, undefined);

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import test from 'node:test';
 import {
   CLIENT_IDENTIFIER,
   CLIENT_VERSION,
-  DEFAULT_MODEL,
+  LIVE_CATALOG_CAPABILITY_PROVENANCE,
   PROVIDER,
 } from '../lib/constants.js';
 import {
@@ -11,7 +12,10 @@ import {
   buildProtocolHeaders,
   entitledModelFromCatalog,
   entitledModelsFromCatalog,
+  GROK_BUILD_IMAGE_COMPAT_PROVENANCE,
 } from '../lib/protocol.js';
+
+const LIVE_MODEL = 'grok-live-current';
 
 function reasoningModel(id, efforts = ['low', 'high'], overrides = {}) {
   return {
@@ -48,13 +52,13 @@ test('protocol headers carry the exact safe selected model and truthful client i
   assert.equal(headers.accept, 'text/event-stream');
   assert.equal(
     headers['user-agent'],
-    'deepseek-harness/0.1.1-rc.2 (+https://github.com/deepseek-ai/deepseek-harness)',
+    `deepseek-harness/${createRequire(import.meta.url)('@deepseek-ai/dsh-llm/package.json').version} (+https://github.com/deepseek-ai/deepseek-harness)`,
   );
   assert.equal(headers['x-grok-agent-id'], undefined);
 });
 
 test('protocol rejects unsafe dynamic ids, header injection, oversized tokens and caller headers', () => {
-  const base = { accessToken: 'token', model: DEFAULT_MODEL };
+  const base = { accessToken: 'token', model: LIVE_MODEL, operation: 'inference' };
   for (const model of ['xai/grok-4', 'grok-4/../../x', 'grok-UPPER', `grok-${'x'.repeat(129)}`]) {
     assert.throws(() => buildProtocolHeaders({ ...base, model }), /unsafe model id/);
   }
@@ -64,23 +68,30 @@ test('protocol rejects unsafe dynamic ids, header injection, oversized tokens an
   assert.throws(() => buildProtocolHeaders({ ...base, extra: { 'x-userid': 'attacker' } }), /unknown protocol option/);
   assert.throws(() => buildProtocolHeaders({ ...base, authorization: 'other' }), /unknown protocol option/);
   assert.throws(() => buildProtocolHeaders({ ...base, operation: 'other' }), /unknown protocol operation/);
-  assert.throws(() => assertFixedInvocation({ provider: 'xai', model: DEFAULT_MODEL }), /provider drift/);
+  assert.throws(() => assertFixedInvocation({ provider: 'xai', model: LIVE_MODEL }), /provider drift/);
   assert.throws(
-    () => assertFixedInvocation({ provider: PROVIDER, model: DEFAULT_MODEL, reasoningEffort: 'high/evil' }),
+    () => assertFixedInvocation({ provider: PROVIDER, model: LIVE_MODEL, reasoningEffort: 'high/evil' }),
     /unsafe reasoning effort/,
   );
   assert.deepEqual(
     assertFixedInvocation({ provider: PROVIDER, model: 'grok-4.7-fast', reasoningEffort: 'low' }),
     { model: 'grok-4.7-fast', reasoningEffort: 'low' },
   );
+  assert.throws(
+    () => buildProtocolHeaders({ accessToken: 'token', model: LIVE_MODEL, operation: 'catalog' }),
+    /must not carry a model override/,
+  );
+  const catalogHeaders = buildProtocolHeaders({ accessToken: 'token', operation: 'catalog' });
+  assert.equal(catalogHeaders['x-grok-model-override'], undefined);
+  assert.equal(catalogHeaders.accept, 'application/json');
 });
 
 test('live catalog returns every exact eligible model with model-owned reasoning metadata', () => {
   const models = entitledModelsFromCatalog({ models: [
-    reasoningModel(DEFAULT_MODEL, [
+    reasoningModel(LIVE_MODEL, [
       { id: 'low', name: 'Low' },
       { value: 'high', name: 'High', description: 'Most reasoning' },
-    ], { contextWindow: 500000, maxCompletionTokens: 128000 }),
+    ], { contextWindow: 500000, maxCompletionTokens: 128000, defaultReasoningEffort: 'high' }),
     {
       id: 'grok-code-fast',
       name: 'Grok Code Fast',
@@ -94,7 +105,7 @@ test('live catalog returns every exact eligible model with model-owned reasoning
     reasoningModel('grok-unknown-backend', ['high'], { apiBackend: 'messages' }),
     reasoningModel('other-model', ['high']),
   ] });
-  assert.deepEqual(models.map((model) => model.id), [DEFAULT_MODEL, 'grok-code-fast', 'grok-not-api']);
+  assert.deepEqual(models.map((model) => model.id), [LIVE_MODEL, 'grok-code-fast', 'grok-not-api']);
   assert.deepEqual(models[0].efforts.map((effort) => effort.id), ['low', 'high']);
   assert.equal(models[0].efforts[1].description, 'Most reasoning');
   assert.equal(models[0].defaultEffort, 'high');
@@ -102,7 +113,60 @@ test('live catalog returns every exact eligible model with model-owned reasoning
   assert.equal(models[0].maxTokens, 128000);
   assert.equal(models[1].supportsReasoning, false);
   assert.deepEqual(models[1].efforts, []);
-  assert.equal(entitledModelFromCatalog({ models: [reasoningModel(DEFAULT_MODEL)] })?.id, DEFAULT_MODEL);
+  assert.equal(entitledModelFromCatalog({ models: [reasoningModel(LIVE_MODEL)] }, LIVE_MODEL)?.id, LIVE_MODEL);
+  assert.equal(models[0].capabilityProvenance, GROK_BUILD_IMAGE_COMPAT_PROVENANCE);
+});
+
+test('live catalog preserves only validated text/image input modalities', () => {
+  const [fallback, multimodal] = entitledModelsFromCatalog({ models: [
+    reasoningModel('grok-text'),
+    reasoningModel('grok-vision', ['high'], {
+      inputModalities: ['image', 'text'],
+      info: { input_modalities: ['text', 'image'] },
+    }),
+  ] });
+  assert.deepEqual(fallback.inputModalities, ['text', 'image']);
+  assert.deepEqual(multimodal.inputModalities, ['text', 'image']);
+  assert.equal(Object.isFrozen(multimodal.inputModalities), true);
+  assert.equal(multimodal.capabilityProvenance, `${LIVE_CATALOG_CAPABILITY_PROVENANCE}:explicit-modalities`);
+
+  assert.throws(() => entitledModelsFromCatalog({ models: [reasoningModel('grok-unknown-modality', ['high'], {
+    inputModalities: ['text', 'audio'],
+  })] }), /unsupported value/);
+  assert.throws(() => entitledModelsFromCatalog({ models: [reasoningModel('grok-duplicate-modality', ['high'], {
+    inputModalities: ['text', 'text'],
+  })] }), /contain duplicates/);
+  assert.throws(() => entitledModelsFromCatalog({ models: [reasoningModel('grok-modality-conflict', ['high'], {
+    inputModalities: ['text'], info: { input_modalities: ['text', 'image'] },
+  })] }), /input modalities aliases conflict/);
+  assert.deepEqual(entitledModelsFromCatalog({ models: [reasoningModel('grok-image-only', ['high'], {
+    inputModalities: ['image'],
+  })] }), []);
+});
+
+test('missing modalities use a versionless Grok Build compatibility overlay without model-name inference', () => {
+  for (const [id, apiBackend] of [
+    ['grok-live-alpha', 'responses'],
+    ['grok-live-beta', 'chat'],
+    ['grok-live-gamma', 'chat_completions'],
+  ]) {
+    const [implicit] = entitledModelsFromCatalog({ models: [reasoningModel(id, ['high'], { apiBackend })] });
+    assert.deepEqual(implicit.inputModalities, ['text', 'image']);
+    assert.equal(implicit.capabilityProvenance, GROK_BUILD_IMAGE_COMPAT_PROVENANCE);
+  }
+  // Explicit live-catalog text-only always wins over the compatibility fact.
+  assert.deepEqual(entitledModelsFromCatalog({ models: [
+    reasoningModel('grok-live-explicit-text', ['high'], { inputModalities: ['text'] }),
+  ] })[0].inputModalities, ['text']);
+  assert.deepEqual(entitledModelsFromCatalog({ models: [
+    reasoningModel('grok-live-explicit-image', ['high'], { inputModalities: ['image', 'text'] }),
+  ] })[0].inputModalities, ['text', 'image']);
+  assert.throws(() => entitledModelsFromCatalog({ models: [
+    reasoningModel('grok-live-conflicting-modalities', ['high'], {
+      inputModalities: ['text'],
+      info: { input_modalities: ['text', 'image'] },
+    }),
+  ] }), /input modalities aliases conflict/);
 });
 
 test('official array, camelCase, _meta and object-map catalog shapes are supported', () => {
@@ -137,16 +201,17 @@ test('official array, camelCase, _meta and object-map catalog shapes are support
       supportedInApi: true,
       supportsReasoningEffort: true,
       reasoningEfforts: ['medium', 'high'],
+      apiBackend: 'chat',
     },
   } });
   assert.equal(mapped[0].id, 'grok-map');
   assert.equal(mapped[0].apiBackend, 'chat');
 });
 
-test('pinned official Grok Build catalog defaults are accepted without supportedInApi', () => {
+test('live catalog-declared defaults are accepted without supportedInApi', () => {
   const models = entitledModelsFromCatalog({ data: [
     {
-      id: 'grok-4.6', model: 'grok-4.6', name: 'Grok 4.6', context_window: 500000,
+      id: 'grok-live-primary', model: 'grok-live-primary', name: 'Live primary', context_window: 500000,
       api_backend: 'responses', supports_reasoning_effort: true, reasoning_effort: 'high',
       reasoning_efforts: [
         { value: 'xhigh', label: 'Extra High Effort' },
@@ -156,7 +221,7 @@ test('pinned official Grok Build catalog defaults are accepted without supported
       ],
     },
     {
-      id: 'grok-4.5', model: 'grok-4.5', name: 'Grok 4.5', context_window: 500000,
+      id: 'grok-live-secondary', model: 'grok-live-secondary', name: 'Live secondary', context_window: 500000,
       api_backend: 'responses', supports_reasoning_effort: true, reasoning_effort: 'high',
       reasoning_efforts: [
         { value: 'high', label: 'High Effort', default: true },
@@ -165,7 +230,7 @@ test('pinned official Grok Build catalog defaults are accepted without supported
       ],
     },
   ] });
-  assert.deepEqual(models.map((model) => model.id), ['grok-4.6', 'grok-4.5']);
+  assert.deepEqual(models.map((model) => model.id), ['grok-live-primary', 'grok-live-secondary']);
   assert.deepEqual(models[0].efforts.map((effort) => effort.id), ['xhigh', 'high', 'medium', 'low']);
   assert.equal(models[0].defaultEffort, 'high');
   assert.equal(models[1].defaultEffort, 'high');
@@ -254,7 +319,7 @@ test('one reasoningEfforts default flag is supported and must agree with indepen
     { id: 'high', default: false },
   ], { defaultReasoningEffort: 'high' })] }), /conflicts with explicit false flag/);
 
-  const staticFallbackDenied = entitledModelsFromCatalog({ models: [reasoningModel(DEFAULT_MODEL, [
+  const staticFallbackDenied = entitledModelsFromCatalog({ models: [reasoningModel(LIVE_MODEL, [
     { id: 'low' },
     { id: 'high', default: false },
   ])] });

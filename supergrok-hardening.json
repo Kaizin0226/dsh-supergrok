@@ -1,13 +1,31 @@
 {
-  "schemaVersion": 2,
+  "usageDashboard": {
+    "endpoint": "https://cli-chat-proxy.grok.com/v1/billing?format=credits",
+    "method": "GET",
+    "cacheSeconds": 60,
+    "manualRefreshCooldownSeconds": 5,
+    "storage": "login-scoped-memory",
+    "billingProtocolSource": "xai-org/grok-build/crates/codegen/xai-grok-shell/src/extensions/billing.rs"
+  },
+  "schemaVersion": 3,
   "provider": "grok-oauth",
-  "defaultModel": "grok-4.6",
-  "defaultReasoningEffort": "high",
   "permission": "read-only",
-  "pluginVersion": "0.3.0-hardened.5",
+  "pluginVersion": "0.7.0-hardened.1",
+  "selection": {
+    "source": "authenticated-live-account-catalog",
+    "fixedModel": false,
+    "fixedReasoningEffort": false,
+    "reasoningEffortDefaultSource": "same-live-model-entry-only",
+    "authoritativeModelDefaultAvailable": false,
+    "catalogOrderSemantics": "display-only-not-recency",
+    "modelNameVersionOrdering": false,
+    "releaseDateOrdering": false,
+    "ambiguousAutomaticModelSelection": "fail-closed",
+    "legacyModelAndReasoningSettingsIgnored": true
+  },
   "settingsUi": {
     "providerGroup": "grok-oauth",
-    "catalogRpc": "llm.models",
+    "catalogRpc": "session.modelCatalog",
     "liveCatalogReadOnly": true,
     "editableFields": [
       "modelsRefreshSeconds"
@@ -34,9 +52,24 @@
     "overlapAllowed": false,
     "serveStaleOnRefreshFailure": false,
     "notifyOnFingerprintChange": true,
-    "revalidateBeforeInference": true,
-    "forceFreshCatalogBeforeInference": true,
+    "revalidateBeforeTurn": true,
+    "turnScopedPreparePreflight": "force-fresh-on-new-turn",
+    "forceFreshCatalogPerInference": false,
+    "preparedDispatchContext": {
+      "fields": [
+        "sessionId",
+        "turn"
+      ],
+      "turnType": "positive-safe-integer",
+      "sameTurnReuse": true,
+      "crossTurnRefresh": true,
+      "preparedModelInfoAndStreamSameRevision": true,
+      "backgroundRefreshCannotReplaceFrozenTurnSnapshot": true,
+      "generationDriftInsideTurn": "fail-closed",
+      "missingContextForTurnScopedDispatch": "fail-closed"
+    },
     "requireHeaderBodyModelMatch": true,
+    "catalogRequestCarriesModelOverride": false,
     "rejectConflictingAliases": true,
     "reasoningEffortDefaultFlagPolicy": "unique-and-consistent",
     "selectorEffortMapsToCanonicalWireValue": true,
@@ -53,24 +86,98 @@
       "chat",
       "chat_completions",
       "responses"
-    ]
+    ],
+    "missingOrUnknownBackendPolicy": "exclude-entry",
+    "catalogRevision": {
+      "format": "sha256:<lowercase-hex>",
+      "canonicalization": "normalized-public-model-facts-bytewise-id-order-v1",
+      "credentialsExcluded": true,
+      "tokensExcluded": true,
+      "diagnosticsExcluded": true,
+      "timestampsExcluded": true
+    },
+    "capabilityProvenance": "grok-oauth-live-catalog/v1"
+  },
+  "liveCanary": {
+    "environment": "DSH_SUPERGROK_LIVE_CANARY_MAX_INFERENCES",
+    "allowedInferenceBudgets": [
+      1,
+      2
+    ],
+    "claimsBeforeNetwork": true,
+    "processWideInferenceBudget": true,
+    "catalogNetworkRequestBudget": 1,
+    "catalogV2FallbackDisabled": true,
+    "catalog401ReplayDisabled": true,
+    "inference401ReplayDisabled": true,
+    "backgroundCatalogSyncDisabled": true,
+    "failedOrExpiredCatalogReuse": false,
+    "legacyAcceptanceMutuallyExclusive": true
+  },
+  "multimodalInput": {
+    "liveCatalogAuthoritative": true,
+    "explicitCatalogModalitiesTakePriority": true,
+    "missingModalitiesPolicy": "grok-build-provider-backend-compatibility-overlay",
+    "modelNameInference": false,
+    "compatibilityOverlay": {
+      "version": 1,
+      "scope": "authenticated-grok-oauth-live-entry-with-recognized-backend-and-omitted-modalities",
+      "inputModalities": [
+        "text",
+        "image"
+      ],
+      "explicitTextOnlyWins": true,
+      "modelVersionIndependent": true,
+      "protocolReference": "xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571"
+    },
+    "allowedModalities": [
+      "text",
+      "image"
+    ],
+    "attachmentService": "@deepseek-ai/dsh-attachment",
+    "requestProjection": "readImageRequest",
+    "admissionOwner": "DSH attachment service",
+    "limitsKind": "Grok Build provider-request compatibility",
+    "allowedRequestMediaTypes": [
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/gif"
+    ],
+    "maxEncodedBytes": 1500000,
+    "maxPixels": 2408448,
+    "maxSide": 2000,
+    "minPixels": 512,
+    "minSide": 8,
+    "allowedImageRoles": [
+      "user",
+      "nested-tool-result"
+    ],
+    "responsesImageType": "input_image",
+    "chatImageType": "image_url",
+    "responsesToolResultImageEncoding": "function_call_output.output",
+    "chatToolResultImageEncoding": "role-tool-content",
+    "silentOmission": false,
+    "inputPreparationOwner": "DSH host logged plugin notice",
+    "maxRequestBodyBytes": 40000000,
+    "requestBudgetKind": "local conservative serialized UTF-8 budget, not official limit"
   },
   "allowedOrigins": [
     "https://auth.x.ai",
     "https://accounts.x.ai",
     "https://cli-chat-proxy.grok.com"
   ],
-  "proxyUrl": "http://127.0.0.1:7897",
   "acceptanceEmptyToolCatalogGuard": true,
   "acceptanceOAuthNetworkDisabled": true,
   "acceptanceSingleInferenceLatch": true,
   "protocolProvenance": "xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571",
   "hostPeerVersions": {
-    "@deepseek-ai/cordis": "4.0.1",
-    "@deepseek-ai/dsh-credentials": "0.1.1-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
-    "@deepseek-ai/dsh-settings": "0.1.1-rc.2",
-    "@deepseek-ai/schemastery": "3.18.1"
+    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-credentials": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
+    "@deepseek-ai/dsh-settings": "0.1.2-rc.1",
+    "@deepseek-ai/schemastery": "3.18.2"
   },
   "canonicalRuntimeTree": {
     "algorithm": "sha256",
@@ -87,5 +194,18 @@
     ],
     "rejectMissing": true,
     "rejectSymlinks": true
+  },
+  "proxyPolicy": {
+    "setting": "proxyUrl",
+    "required": true,
+    "protocol": "http:",
+    "hosts": [
+      "127.0.0.1",
+      "[::1]"
+    ],
+    "credentials": false,
+    "directFallback": false,
+    "environmentDiscovery": false,
+    "changeRequiresRestart": true
   }
 }
