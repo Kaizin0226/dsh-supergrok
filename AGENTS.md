@@ -2,6 +2,7 @@
 
 These rules apply to every task in this Git repository.
 
+- Scope is limited to SuperGrok OAuth integration with DSH and its dedicated Grok-optimized mode. Required core patches, extensions, build/install tooling and tests are supporting implementation for those two capabilities. Public documentation must not present unrelated integrations as delivered or optional components.
 - Preparing a developer preview does not authorize visibility changes or release publication. Follow docs/PUBLIC-RELEASE.md; the owner separately approves that final step. Do not copy or publish credentials, OAuth grants, cookies, authentication state, sessions, chats, databases, logs, usage records, host fingerprints, production evidence, rollback records, backups, or real absolute paths.
 - Preserve generic encryption, authentication protection, route gates, permission checks, fail-closed behavior, and synthetic security tests.
 - Treat the provider's live authenticated catalog as the only entitlement source. Unknown, stale, conflicting, or unsupported models and efforts fail closed without fallback.
@@ -14,6 +15,7 @@ These rules apply to every task in this Git repository.
 
 ## 中文
 
+- 仓库范围仅限 SuperGrok OAuth 接入 DSH 及专属 Grok 优化模式。必需的核心补丁、扩展、构建安装工具和测试均为这两项功能的配套实现；公开文档不得将无关集成表述为交付项或可选组件。
 - 准备开发者预览版不授权改变可见性或发布 Release；遵循 docs/PUBLIC-RELEASE.md，最终动作由所有者单独批准。不得提交或公开凭据、OAuth 授权、Cookie、认证状态、会话、聊天、数据库、日志、额度记录、主机指纹、生产证据、回滚记录、备份或真实绝对路径。
 - 保留通用加密、认证防护、路由限制、权限校验、失败关闭行为及合成安全测试。
 - provider 实时认证目录是唯一模型资格来源；型号或 effort 未知、过期、冲突或不支持时拒绝，不回退。

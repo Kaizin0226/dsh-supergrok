@@ -2,6 +2,9 @@
 
 ## English
 
+Releases cover SuperGrok OAuth integration with DSH and its dedicated
+Grok-optimized mode, together with their required supporting implementation.
+
 Developer previews distribute source and reproducible Windows build and
 installation tools. They are marked as prereleases and do not include
 precompiled assets or npm publication. Published versions and compatibility
@@ -48,6 +51,8 @@ the reporting channel is documented in [SECURITY.md](../SECURITY.md). Offline
 test results and live-service validation must be reported separately.
 
 ## 简体中文
+
+发行范围仅限 SuperGrok OAuth 接入 DSH 和专属 Grok 优化模式，以及必需的配套实现。
 
 开发者预览版提供源码及可复现的 Windows 构建、安装工具，标记为预发行，不附预编译包，
 不发布 npm。已发布版本与兼容信息见[发行说明](RELEASE-NOTES.md)。

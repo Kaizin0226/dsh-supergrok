@@ -24,8 +24,8 @@ user's own DSH login, never the official client's credential storage.
 
 `npm run source-hash` measures the checked-out source tree. `npm run
 canonical-hash` measures the provider runtime payload, including its shrinkwrap
-and hardening declaration. These are integrity tools, not an assertion that an
-existing Bridge trusts this release. `npm-shrinkwrap.json` is included in the
+and hardening declaration. These tools verify source and package integrity.
+`npm-shrinkwrap.json` is included in the
 provider package. The portable bundle additionally freezes the complete runtime
 graph in its own package-lock and checksums all installation inputs.
 
@@ -49,7 +49,7 @@ provider 标识为 `dsh-supergrok-oauth-hardened/0.7.0-hardened.1`；token 仅�
 不读取官方客户端凭据存储。
 
 `npm run source-hash` 计算检出源码树，`npm run canonical-hash` 计算包含 shrinkwrap 和加固声明的
-provider 运行负载。两者用于完整性校验，不表示现有 Bridge 已信任此发行。
+provider 运行负载。两者用于源码与包的完整性校验。
 provider 包含 `npm-shrinkwrap.json`；安装组合另用完整依赖锁固定运行图，并校验所有安装输入。
 
 参见[第三方说明](THIRD-PARTY-NOTICES.md)。仓库仅包含选定源码、测试与通用文档；

@@ -9,8 +9,10 @@
 [Source release](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2)
 · Released 2026-09-06 (UTC) · Commit `021738367ccb7967a765cbd67722db124e18b152`
 
-This source-only developer preview integrates SuperGrok OAuth and a native
-Grok-optimized mode with DSH. It requires Windows, Node.js 24 and DSH
+This source-only developer preview covers SuperGrok OAuth integration with DSH
+and a dedicated Grok-optimized mode within DSH. Required core patches,
+extensions, build/install tools and tests support these two capabilities.
+It requires Windows, Node.js 24 and DSH
 `0.1.2-rc.1` with this repository's core patches, producing combination
 `0.1.2-rc.1.grok.2`. Follow the [build and installation guide](../deployment/windows/README.md#english);
 other DSH versions and unpatched installations are not validated.
@@ -40,9 +42,8 @@ passed 796 tests, clean builds, installed web/headless compositions and
 recoverable installation/rollback. Tests use synthetic services. Real OAuth,
 model and image inference, and the production usage-panel UI are unverified.
 
-This is an unofficial experimental integration. macOS/Linux, existing data
-migration and existing Bridge trust configurations are outside the supported
-combination. Distribution includes source and build/install tools, without
+This is an unofficial experimental integration. macOS/Linux and existing data
+migration are outside the supported combination. Distribution includes source and build/install tools, without
 precompiled assets or npm publication. Read the [service limitations](SERVICE-ACCESS.md)
 and [security policy](../SECURITY.md); preserve applicable licenses and attribution.
 
@@ -68,7 +69,8 @@ The documented run-mode tests and installed runtime do not use these features.
 [源码发行](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2)
 · 发布日期：2026-09-06（UTC） · 提交：`021738367ccb7967a765cbd67722db124e18b152`
 
-本源码开发者预览版为 DSH 提供 SuperGrok OAuth 接入及原生 Grok 优化模式。
+本源码开发者预览版仅覆盖 SuperGrok OAuth 接入 DSH，以及 DSH 内的专属 Grok 优化模式。
+必需的核心补丁、扩展、构建安装工具和测试均为这两项功能的配套实现。
 要求 Windows、Node.js 24，以及 DSH `0.1.2-rc.1` 搭配本仓库核心补丁，
 构建后的核心组合为 `0.1.2-rc.1.grok.2`。
 请遵循[构建与安装指南](../deployment/windows/README.md#简体中文)；
@@ -95,7 +97,7 @@ The documented run-mode tests and installed runtime do not use these features.
 的 796 项测试、干净构建、安装后的 web/headless 组合及可恢复安装和回滚通过。
 测试使用合成服务；未验证真实 OAuth、模型和图片推理及生产额度面板。
 
-本项目为非官方实验性集成。macOS／Linux、既有数据迁移及现有 Bridge 信任配置不属于支持组合。
+本项目为非官方实验性集成。macOS／Linux 和既有数据迁移不属于支持组合。
 提供源码与构建安装工具，不附预编译包、不发布 npm。
 请阅读[服务限制](SERVICE-ACCESS.md)和[安全政策](../SECURITY.md)，保留适用许可与署名。
 

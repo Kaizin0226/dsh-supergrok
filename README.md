@@ -14,14 +14,19 @@ validated. Use this repository's [build and installation workflow](deployment/wi
 to install the complete compatible combination; installing only the provider into
 an unpatched DSH installation does not supply the full integration.
 
-Use your SuperGrok subscription in DeepSeek Harness (DSH) via OAuth, with a
-dedicated Grok-optimized agent mode. Sign in with your own account inside DSH;
+This repository covers two capabilities:
+
+1. SuperGrok subscription access in DSH through OAuth.
+2. A dedicated Grok-optimized mode within DSH.
+
+Sign in with your own account inside DSH;
 no xAI API key is required. Available models and reasoning options come from
 the authenticated live catalog and depend on account access and a compatible
 installation.
 
-This repository includes the OAuth provider, Grok preset, native work-state and
-historical-image extensions, and reproducible DSH core patches. The first
+The OAuth provider, Grok preset, required core patches, native work-state and
+historical-image extensions, build/install tools and tests support these two
+capabilities. The first
 supported installation target is Windows with **Node.js 24**. This preview
 provides source and build/install tools, without precompiled release downloads
 or npm publication.
@@ -35,7 +40,6 @@ or npm publication.
 | DSH core overlay | `0.1.2-rc.1.grok.2`, based on exact tag commit `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
 | Upstream CLI | `@deepseek-ai/dsh@0.1.2-rc.1`, with source-built core overrides |
 | Attachment history, recall tool, work-state context | `1.1.0` each |
-| Optional Bridge | Must separately accept this release's actual package hashes and proxy contract |
 
 See [component lock](components.lock.json), [source provenance](UPSTREAM-PROVENANCE.md)
 and [Windows build/install guide](deployment/windows/README.md).
@@ -87,10 +91,7 @@ and image inference, and the production usage-panel UI have not been accepted
 for this release. macOS/Linux and existing data migration are outside the
 supported preview workflow. No availability or production-support promise is made.
 
-DSH owns credentials, sessions, permission enforcement and native tools. Bridge
-is optional: configure its local trust using the hashes of the installed
-release; an older fixed trust hash does not authorize this package. This
-installer does not manage Bridge trust settings.
+DSH owns credentials, sessions, permission enforcement and native tools.
 The [old xAI API contracts](contracts/xai-dsh/README.md) are historical reference
 and are excluded from the default build/install route.
 
@@ -117,10 +118,15 @@ time or compatibility guarantee beyond the documented tested combination.
 [构建与安装流程](deployment/windows/README.md#简体中文)安装完整兼容组合；
 仅在未打补丁的原版 DSH 中安装 provider，无法获得本项目的完整集成功能。
 
-将你的 SuperGrok 订阅通过 OAuth 登录接入 DeepSeek Harness（DSH），并提供专属 Grok 优化模式。
+本仓库仅覆盖两项功能：
+
+1. 通过 OAuth 将 SuperGrok 订阅接入 DSH。
+2. 在 DSH 内提供专属 Grok 优化模式。
+
 通过自己的 DSH 登录授权，无需 xAI API key；可用模型与 reasoning 选项以账户实时目录和兼容安装为准。
 
-仓库包含 provider、Grok 预设、原生工作状态与历史图片扩展，以及可复现的 DSH 核心补丁。
+Provider、Grok 预设、必需的核心补丁、原生工作状态与历史图片扩展，以及构建安装工具和测试，
+均为这两项功能的配套实现。
 首版安装支持 **Windows + Node.js 24**，提供源码与构建、安装工具；不发布 npm 包或预编译发行附件。
 
 ### 兼容组合
@@ -132,7 +138,6 @@ time or compatibility guarantee beyond the documented tested combination.
 | DSH 核心补丁组合 | `0.1.2-rc.1.grok.2`，上游精确提交 `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
 | 上游启动器 | `@deepseek-ai/dsh@0.1.2-rc.1`，搭配本仓库构建的五个核心包 |
 | 图片历史、图片召回、工作状态扩展 | 均为 `1.1.0` |
-| Bridge（可选） | 须另行验证新版包哈希与代理契约，不沿用旧版信任结论 |
 
 完整来源与锁定关系见 [组件锁](components.lock.json)、[源码来源](UPSTREAM-PROVENANCE.md)。
 
@@ -160,7 +165,7 @@ time or compatibility guarantee beyond the documented tested combination.
 组合测试在独立安装中加载 web/headless，并使用合成 adapter 和自有本地 HTTP 服务。
 离线测试、生产加载和真实模型验证覆盖不同范围；详见 [验证结果与范围](docs/VALIDATION.md)。
 
-Bridge 是可选配套，需要按实际安装包哈希配置本地信任；安装工具不管理 Bridge 信任设置。
+凭据、会话、权限校验和原生工具由 DSH 管理。
 [旧 xAI API 合约](contracts/xai-dsh/README.md) 仅作历史参考，不进入默认安装流程。
 
 原 [MIT 版权声明](LICENSE) 保留，自有新增内容沿用 MIT；适用的 Grok Build 衍生内容保留

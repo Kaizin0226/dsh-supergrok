@@ -2,6 +2,10 @@
 
 ## English
 
+Contributions are scoped to SuperGrok OAuth access in DSH and the dedicated
+Grok-optimized mode. Core patches, extensions, build/install tooling and tests
+are supporting implementation for those capabilities.
+
 This is a developer preview for Windows and Node.js 24. Start from a fresh clone
 of `main`; do not merge commits from an older, rewritten-history checkout.
 `hardened/main` is a compatibility mirror, not a separate feature line. Keep
@@ -28,6 +32,9 @@ for vulnerabilities. Discuss large features before investing in a large patch.
 Maintenance is best-effort; untested combinations are not supported.
 
 ## 中文
+
+贡献范围仅限 SuperGrok OAuth 接入 DSH 和专属 Grok 优化模式；核心补丁、扩展、
+构建安装工具及测试均须服务于这两项功能。
 
 这是面向 Windows 与 Node.js 24 的开发者预览版。从 `main` 全新克隆，不合并历史改写前的旧提交。
 `hardened/main` 是兼容镜像，不是另一条功能开发线。保持补丁聚焦，在 PR 中说明可观察行为及相关验证。
