@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, openSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, globSync, mkdirSync, openSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -45,8 +45,8 @@ if (values.phase === 'all' || values.phase === 'prepare') {
   finally { closeSync(fd); }
   mkdirSync(source);
   run('tar', ['-xf', archive, '-C', source]);
-  for (const name of lock.patches) run('git', ['apply', '--check', join(root, 'patches/dsh', name)], source);
-  for (const name of lock.patches) run('git', ['apply', join(root, 'patches/dsh', name)], source);
+  for (const name of lock.patches) run('git', ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'apply', '--check', join(root, 'patches/dsh', name)], source);
+  for (const name of lock.patches) run('git', ['-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'apply', join(root, 'patches/dsh', name)], source);
   json(join(work, 'build-state.json'), { upstreamCommit: lock.commit, distributionVersion: lock.distributionVersion });
   console.log('Prepared clean upstream source and reviewed core patch.');
 }
@@ -71,6 +71,8 @@ if (values.phase === 'all' || values.phase === 'pack') {
   const packages = Object.entries(lock.packages).map(([path, version]) => ({ path, version,
     manifest: JSON.parse(readFileSync(join(source, path, 'package.json'), 'utf8')) }));
   const versions = new Map(packages.map(p => [p.manifest.name, p.version]));
+  const workspaceVersions = new Map(globSync(['vendor/*/package.json', 'packages/*/*/package.json', 'apps/*/package.json'], { cwd: source })
+    .map(path => { const m = JSON.parse(readFileSync(join(source, path), 'utf8')); return [m.name, m.version]; }));
   const report = [];
   for (const p of packages) {
     const destination = join(work, 'packages', p.manifest.name.replace('@deepseek-ai/', ''));
@@ -79,14 +81,20 @@ if (values.phase === 'all' || values.phase === 'pack') {
       const input = join(source, p.path, name);
       if (existsSync(input)) cpSync(input, join(destination, name), { recursive: true });
     }
+    if (!existsSync(join(destination, 'LICENSE'))) cpSync(join(source, 'LICENSE'), join(destination, 'LICENSE'));
+    // Preset provenance is byte-stable across Windows Git newline settings.
+    for (const yaml of globSync('presets/**/*.yml', { cwd: destination })) {
+      const path = join(destination, yaml);
+      writeFileSync(path, readFileSync(path, 'utf8').replace(/\r\n?/g, '\n'));
+    }
     p.manifest.version = p.version;
     for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
       for (const [name, value] of Object.entries(p.manifest[field] ?? {})) {
         if (versions.has(name)) p.manifest[field][name] = versions.get(name);
         else if (value.startsWith('workspace:')) {
-          // DSH family packages share the pinned upstream release; vendor peers already have explicit versions.
-          p.manifest[field][name] = name.startsWith('@deepseek-ai/dsh-') ? '0.1.2-rc.1' : value.slice('workspace:'.length);
-          if (['*', '^', '~'].includes(p.manifest[field][name])) throw Error(`Unresolved workspace dependency: ${name}`);
+          const exactVersion = workspaceVersions.get(name);
+          if (!exactVersion) throw Error(`Unresolved workspace dependency: ${name}`);
+          p.manifest[field][name] = exactVersion;
         }
       }
     }

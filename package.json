@@ -31,7 +31,10 @@
     "lib/**/*.js",
     "cordis.patch.yml",
     "supergrok-hardening.json",
-    "npm-shrinkwrap.json"
+    "npm-shrinkwrap.json",
+    "NOTICE",
+    "THIRD-PARTY-NOTICES.md",
+    "licenses/*.txt"
   ],
   "dsh": {
     "client": {
@@ -70,7 +73,7 @@
     "test:provider": "node test/run-tests.mjs",
     "test:smoke": "node test/run-tests.mjs smoke",
     "test:preset": "node presets/grok-optimized/test-preset.mjs",
-    "test:contracts": "node --test contracts/xai-dsh/test/catalog-snapshot.test.mjs contracts/xai-dsh/test/offline-source.test.mjs contracts/xai-dsh/test/rollout.test.mjs",
+    "test:contracts": "node scripts/test-contracts.mjs",
     "test:deployment": "powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTreeSnapshot.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTransactions.ps1",
     "safety": "node scripts/check-repository-safety.mjs",
     "history-safety": "node scripts/check-git-history.mjs",
@@ -78,9 +81,11 @@
     "source-hash": "node scripts/source-tree-hash.mjs",
     "pack:check": "npm pack --dry-run",
     "verify": "npm run safety && npm run history-safety && npm test && npm run canonical-hash && npm run source-hash && npm run pack:check",
-    "build:dsh": "node scripts/build-dsh.mjs"
+    "build:dsh": "node scripts/build-dsh.mjs",
+    "build:suite": "node scripts/build-suite.mjs",
+    "test:installed": "node scripts/test-installed.mjs"
   },
-  "license": "MIT",
+  "license": "(MIT AND Apache-2.0)",
   "dependencies": {
     "undici": "7.29.0"
   },

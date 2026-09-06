@@ -170,8 +170,8 @@ async function boot(): Promise<Context> {
 }
 
 describe('historical image recall through real Loader composition', () => {
-  it('ships one generic tool-attachment-history row only in the grok-optimized user preset', async () => {
-    const source = await readFile(join(process.cwd(), '..', 'grok-optimized-preset', 'agent.cordis.yml'), 'utf8')
+  it('ships one generic tool-attachment-history row in the grok-optimized user preset', async () => {
+    const source = await readFile(join(process.cwd(), 'presets', 'grok-optimized', 'agent.cordis.yml'), 'utf8')
     expect(source.match(/id: tool-attachment-history/gu)).toHaveLength(1)
     expect(source).toContain('name: dsh-tool-attachment-history')
     expect(source.indexOf('id: tool-fs-search')).toBeLessThan(source.indexOf('id: tool-attachment-history'))

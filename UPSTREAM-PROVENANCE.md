@@ -1,46 +1,34 @@
 # Fixed-source provenance
 
-## Plugin baseline
+| Component | Exact source |
+| --- | --- |
+| Provider baseline `0.2.10` | [wangyaominde/dsh-llm-grok-oauth](https://github.com/wangyaominde/dsh-llm-grok-oauth/tree/108cc76224d1845b5c88602f7c7a24bb1ced0497), commit `108cc76224d1845b5c88602f7c7a24bb1ced0497` |
+| DSH baseline `dsh-v0.1.2-rc.1` | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness/tree/a66e4702047846cdaa10c66c9d3df3951f5ea70d), commit `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
+| Initial OAuth/protocol snapshot `1.0.12` | [xai-org/grok-build](https://github.com/xai-org/grok-build/tree/bc7f02eddd3d84085849dc19ed216f11c23b0571), commit `bc7f02eddd3d84085849dc19ed216f11c23b0571` |
+| Persona and current reference snapshot | [xai-org/grok-build](https://github.com/xai-org/grok-build/tree/72a61251fcffb464bcc687aeb5a998e5a98ec0c9), commit `72a61251fcffb464bcc687aeb5a998e5a98ec0c9` |
 
-- repository: `https://github.com/wangyaominde/dsh-llm-grok-oauth.git`
-- commit: `108cc76224d1845b5c88602f7c7a24bb1ced0497`
-- Git tree: `41074aba06cea2af69c4c35c12992c8be21457e9`
-- upstream version: `0.2.10`
-- baseline `package-lock.json` SHA-256:
-  `6E9D3B851D2BF00DB8CFBA8A5B66098D4B511912ACE1564AF1492E810E2B9C93`
-- baseline `package.json` SHA-256:
-  `1064C8CEB03D15006B3DB7FD76BA8071099CF5C7DC72E7CF8C324350A1263850`
-- baseline `cordis.patch.yml` SHA-256:
-  `E1FDF5387431A048A6E64D629C03B463C3032CA70FCFAB932FF30FE3A58212F9`
+The public adaptation advances provider `0.6.0-hardened.1` to
+`0.7.0-hardened.1` to distinguish its explicit proxy contract. It retains the
+`0.8.0` preset and the `0.1.2-rc.1.grok.2` core overlay generation.
+[The source lock](patches/dsh/source.lock.json) pins the exact DSH revision,
+patch and changed package versions. The installer uses the unmodified upstream
+CLI package `0.1.2-rc.1` with five source-built core packages; the distribution
+label is not a newly published CLI package.
 
-The hardened source was produced from a detached checkout of that exact
-commit. No moving branch is an input.
+`OAUTH_CLIENT_ID` is a public client identifier from the pinned device-flow
+reference, not a secret or authorization grant. Origins, paths, methods,
+redirect handling and client identity are fixed in `lib/constants.js` and
+`lib/net.js`. The provider identifies itself as
+`dsh-supergrok-oauth-hardened/0.7.0-hardened.1`. User tokens come only from the
+user's own DSH login, never the official client's credential storage.
 
-## Protocol snapshot
+`npm run source-hash` measures the checked-out source tree. `npm run
+canonical-hash` measures the provider runtime payload, including its shrinkwrap
+and hardening declaration. These are integrity tools, not an assertion that an
+existing Bridge trusts this release. `npm-shrinkwrap.json` is included in the
+provider package. The portable bundle additionally freezes the complete runtime
+graph in its own package-lock and checksums all installation inputs.
 
-- repository: `https://github.com/xai-org/grok-build.git`
-- commit: `bc7f02eddd3d84085849dc19ed216f11c23b0571`
-- Git tree: `1f9266ee49f4f1d82450b45f10f68a7dd58b23ef`
-- snapshot package version: `1.0.12`
-- snapshot `SOURCE_REV`: `d5a0335a47221e8c9519936cb693e9b6450227ec`
-
-The protocol snapshot is provenance only. This plugin identifies itself as
-`dsh-supergrok-oauth-hardened/0.3.0-hardened.5`; it does not claim to be an
-official Grok CLI binary.
-
-## Hash rules
-
-- `npm run source-hash` recursively hashes the complete source, documentation,
-  tests, scripts, manifest, patch and lock using sorted UTF-8 slash-separated
-  paths and records `path + NUL + bytes + NUL`. It rejects symbolic links and
-  excludes only `.git`, `.npm-cache`, `node_modules`, and `*.tgz`. Add `--
-  --list` to print the exact ordered source file set used for the digest.
-- `npm run canonical-hash` applies the Bridge runtime rule to
-  `package.json`, `npm-shrinkwrap.json`, `cordis.patch.yml`,
-  `supergrok-hardening.json`, and `lib/**/*.js`, also rejecting missing files
-  and symbolic links.
-
-`npm-shrinkwrap.json` is the publishable lock contract. It is derived from the
-hardened dependency lock and must be present as a regular file in both the npm
-tarball and installed plugin root. `package-lock.json` is intentionally absent
-because npm excludes it from published packages.
+See [third-party notices](THIRD-PARTY-NOTICES.md). This repository contains only
+selected source, tests and general documentation. Task transcripts, production
+reports, authentication state and reference-clone contents are not build inputs.

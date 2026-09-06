@@ -17,7 +17,7 @@ const AUDITED_PACKAGES = [
 test('installed DSH packages match the exact audited API generation', async () => {
   for (const name of AUDITED_PACKAGES) {
     const manifest = await importDshPackageJson(name);
-    const expected = name === '@deepseek-ai/dsh' ? `${SUPPORTED_DSH_VERSION}.grok.1` : SUPPORTED_DSH_VERSION;
+    const expected = SUPPORTED_DSH_VERSION;
     assert.equal(manifest.version, expected, `${name} version drift`);
   }
 });

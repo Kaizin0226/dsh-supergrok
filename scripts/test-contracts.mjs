@@ -1,0 +1,11 @@
+import { spawnSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const env = { ...process.env };
+for (const key of Object.keys(env)) if (/API_KEY|TOKEN|SECRET|AUTHORIZATION/i.test(key)) delete env[key];
+env.XAI_API_KEY = '';
+const files = ['catalog-snapshot', 'offline-source', 'rollout'].map(name => join(root, 'contracts/xai-dsh/test', name + '.test.mjs'));
+const result = spawnSync(process.execPath, ['--require', join(root, 'test/offline-guard.cjs'), '--test', ...files], { cwd: root, env, stdio: 'inherit', windowsHide: true });
+if (result.error) throw result.error;
+process.exitCode = result.status ?? 1;

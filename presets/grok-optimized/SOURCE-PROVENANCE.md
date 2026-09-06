@@ -1,7 +1,16 @@
 # Grok optimized preset provenance
 
-The preset is a two-file DSH agent preset derived from the reviewed standard-preset capability composition for the DSH version pinned in `components.lock.json`.
+Version 0.8.0 is derived from the exact DSH standard composition in the root
+source lock. The two runtime YAML files are accompanied by package metadata,
+base-lock and PROVENANCE.md in new suite installations.
 
-The persona layer changes only autonomous progress, real-tool use, verification discipline, concise communication, and use of already-present native DSH subagents. It does not bind a concrete model, provider, authentication route, API endpoint, or external Grok executable.
+`base-lock.json` records upstream standard, local distribution standard,
+Grok-only work-state context, the two YAML payload hashes and the fixed Grok
+Build persona reference. Both local modes mount recall exactly once; only
+Grok mode adds work-state context. Native child agents inherit their model,
+with native explicit cross-model selection remaining available.
 
-The local Grok Build reference clone is intentionally absent. Only its reviewed repository, commit, and package version are recorded in the repository component lock and provider provenance.
+The adapted persona references xai-org/grok-build at
+`72a61251fcffb464bcc687aeb5a998e5a98ec0c9`; preserve the root NOTICE and Apache-2.0
+license alongside original MIT integration work. No external Grok executable
+is loaded. Model choices, permissions and account authorization stay in DSH.

@@ -1,107 +1,80 @@
-# Hardened SuperGrok OAuth provider for DSH
+# SuperGrok for DeepSeek Harness (DSH)
 
-This private derived repository manages the complete DSH × SuperGrok source boundary:
+[简体中文](README.zh.md)
 
-- the hardened OAuth provider and live subscription catalog at the repository root;
-- the model-independent Grok optimization preset under `presets/grok-optimized`;
-- synthetic xAI/DSH protocol fixtures and reviewed overlay source under `contracts/xai-dsh`;
-- parameterized Windows install, verification, and rollback tooling under `deployment/windows`.
+Use your SuperGrok subscription in DeepSeek Harness (DSH) via OAuth, with a
+dedicated Grok-optimized agent mode. Sign in with your own account inside DSH;
+no xAI API key is required. Available models and reasoning options come from
+the authenticated live catalog and depend on account access and a compatible
+installation.
 
-Real credentials, OAuth grants, settings, sessions, databases, logs, production evidence, local hashes, backups, absolute paths, npm packages, and reference clones are excluded. The public provider repository is configured only as Git remote `upstream`; this is not a GitHub fork.
+This repository includes the OAuth provider, Grok preset, native work-state and
+historical-image extensions, and reproducible DSH core patches. The first
+supported installation target is Windows with **Node.js 24**. The repository
+remains private pending a separate visibility decision; the source and tooling
+are prepared for independent builds.
 
-This local build is pinned to upstream
-`wangyaominde/dsh-llm-grok-oauth@108cc76224d1845b5c88602f7c7a24bb1ced0497`
-and hardened as version `0.3.0-hardened.5`.
+## Components
 
-It exposes one fixed provider and treats the signed-in account's live
-subscription catalog as the only source of model entitlement:
+| Component | Version / contract |
+| --- | --- |
+| SuperGrok provider | `0.7.0-hardened.1`; required explicit loopback HTTP proxy |
+| Grok-optimized preset | `0.8.0` |
+| DSH core overlay | `0.1.2-rc.1.grok.2`, based on exact tag commit `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
+| Upstream CLI | `@deepseek-ai/dsh@0.1.2-rc.1`, with source-built core overrides |
+| Attachment history, recall tool, work-state context | `1.1.0` each |
+| Optional Bridge | Must separately accept this release's actual package hashes and proxy contract |
 
-- provider: `grok-oauth`
-- default model: `grok-4.6`
-- default reasoning effort: `high`
-- intended DSH permission: `read-only`
+See [component lock](components.lock.json), [source provenance](UPSTREAM-PROVENANCE.md)
+and [Windows build/install guide](deployment/windows/README.md).
 
-The selector advertises only visible, text-capable `grok-*` models returned by
-the authenticated subscription catalog and backed by a supported wire protocol.
-The catalog's `supportedInApi` flag is validated but does not filter session
-OAuth models because Grok Build uses it for API-key visibility. Reasoning efforts
-come from each exact model entry. Selector ids are mapped to their catalog-owned
-canonical wire values (for example `deep` to `xhigh`) before dispatch. A static
-list, successful login, or another model's entitlement is never accepted as
-proof. Before every inference, the adapter forces one catalog refresh and uses
-that same fresh snapshot to validate the exact model, effort, and backend;
-unknown, removed, or stale entries fail before
-inference network I/O, without clamping, aliases, or fallback.
-Security-critical aliases across an entry, `info`, and `_meta` must agree or the
-entire catalog fails closed. One reasoning-effort entry may declare
-`default: true`; it must be unique and agree with any independent default field.
-The complete selector catalog is read from `/v1/models`; `/v1/models-v2` is a
-404/405-only compatibility fallback. A loopback same-origin diagnostic route
-exposes only bounded status enums and counts, never catalog values, response
-bodies, headers, tokens, or error messages.
+## Behavior
 
-On-demand catalog caching remains controlled by `modelsRefreshSeconds`; its
-default is 60 seconds and the accepted range is 10 through 86400 seconds.
-Ordinary DSH processes additionally perform at most one non-overlapping live
-catalog synchronization every 3600 seconds, notifying DSH only when the model or
-capability fingerprint changes. Refresh failures clear stale entitlement. The
-production default remains `grok-4.6/high`; discovering a model never changes
-that default automatically.
+- OAuth, model catalog, read-only usage and inference share one dispatcher
+  configured by required `proxyUrl`. Only unauthenticated HTTP proxy endpoints
+  on numeric `127.0.0.1` or `[::1]` are accepted. Missing/invalid settings fail
+  before network access. No system-proxy lookup or direct fallback is used.
+  Changing the proxy requires reloading the provider.
+- The usage panel reports the account's quota response and cache freshness.
+  Missing or expired data stays visibly unavailable/stale; quota is not an
+  API-token price or a calculated bill.
+- Image preparation validates owned DSH attachments, records preparation
+  notices through the host, and accounts for the **complete serialized request**.
+  The default budget is **40,000,000 bytes**; oversized inference requests are
+  rejected before sending. Recall input remains `{attachmentId, occurrence?}`.
+- Global default stays `standard`. Both local standard and `grok-optimized`
+  mount image recall once. Only Grok mode mounts deterministic work-state
+  context. The upstream standard has neither local extension; provenance
+  distinguishes all three compositions.
+- Child agents inherit the selected model unless the native explicit
+  cross-model option is enabled. The preset does not pin a Grok model or add
+  an external agent runtime.
 
-## Fixed security boundary
+## Build and verify
 
-All OAuth, catalog, and inference traffic uses one pinned dispatcher through
-`http://127.0.0.1:7897`. There is no direct fallback, environment/system proxy
-discovery, redirect following, curl fallback, or configurable endpoint.
-Outbound requests are limited to the paths declared by the runtime code under:
+From a fresh checkout, run `npm ci --ignore-scripts`, then `npm run verify`.
+Use `npm run build:dsh -- --work-dir <external-build-directory>` followed by
+`npm run build:suite -- --work-dir <same-build-directory>` to create a portable
+bundle. The [installation guide](deployment/windows/README.md) supplies complete
+PowerShell commands, default-dry-run installation, fresh data initialization,
+manual launch and recoverable rollback.
 
-- `https://auth.x.ai`
-- `https://cli-chat-proxy.grok.com/v1`
+Tests use synthetic credentials and mocked services. Source builds and npm
+installation download public dependencies; offline tests make no real OAuth,
+model-catalog or inference requests. Installed web/headless composition tests
+exercise actual DSH loading with a synthetic adapter and a fixture-owned local
+HTTP listener. Passing them does not establish production UI or live model
+acceptance. See [validation and public-release checklist](docs/VALIDATION.md).
 
-The only browser navigation targets accepted are HTTPS pages on
-`auth.x.ai` or `accounts.x.ai`. The server never launches a browser or shell;
-the user must click the validated link in the DSH UI.
+## Boundaries
 
-Protocol headers are derived from the fixed snapshot
-`xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571`.
-The client identifier, version, and User-Agent identify this plugin truthfully;
-HTTP 426 fails closed rather than impersonating an official Grok binary.
+DSH owns credentials, sessions, permission enforcement and native tools. Bridge
+is optional: configure its local trust using the hashes of the installed
+release; an older fixed trust hash does not authorize this package. This
+project does not edit another Bridge repository or the user's trust settings.
+The [old xAI API contracts](contracts/xai-dsh/README.md) are historical reference
+and are excluded from the default build/install route.
 
-## Credentials and login
-
-Login is always a fresh DSH-only OAuth device flow. The plugin never reads,
-imports, copies, modifies, or deletes any official Grok CLI credential. Tokens
-are stored only as a DSH grant record at `llm-grok-oauth/tokens`
-(UI label `GROK_OAUTH_TOKENS`). If that service is unavailable or the stored record is
-invalid, the plugin refuses to operate; it has no plaintext file fallback.
-
-Management routes require loopback transport, a loopback `Host`, same-origin
-browser fetch metadata, an exact same-origin `Origin` for mutations, JSON,
-bounded empty request bodies, and a CSRF nonce obtained from the status route.
-
-DSH-level automatic retries are disabled. Normal inference can perform at most
-one replay after a single-flight token refresh when the first response is 401.
-Set `DSH_SUPERGROK_ACCEPTANCE=1` in the dedicated acceptance DSH child process
-to disable even that replay. `XAI_API_KEY` is never read by this package.
-
-Live catalog synchronization is not automatic plugin updating. Only new models
-and efforts compatible with the pinned protocol snapshot and the existing
-`responses` or `chat/completions` backends can appear automatically. A new
-endpoint, backend, or catalog protocol shape fails closed and requires a newly
-reviewed pinned plugin release.
-
-## Verification
-
-Run `npm test`. The test runner explicitly removes `XAI_API_KEY` from itself
-and all test subprocesses and reports only the boolean evidence
-`XAI_API_KEY absent=true`.
-
-Run `npm run canonical-hash` to compute the Bridge trust hash. The exact file
-set and record format are declared in `supergrok-hardening.json`; missing files
-and symbolic links are rejected. The publishable `npm-shrinkwrap.json` is part
-of that runtime set and must remain present after installation.
-
-Run `npm run source-hash -- --list` in the complete source checkout to record
-the source digest and its exact ordered file set. The source digest is release
-provenance; an installed runtime package intentionally does not contain all
-tests, scripts, and source documentation needed to reproduce it.
+Preserve the original [MIT license](LICENSE), [NOTICE](NOTICE), and applicable
+[third-party licenses](THIRD-PARTY-NOTICES.md). Code licensing does not grant
+subscription access or service authorization. This is an independent integration.

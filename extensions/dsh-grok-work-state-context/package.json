@@ -38,7 +38,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=24 <25"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.2",

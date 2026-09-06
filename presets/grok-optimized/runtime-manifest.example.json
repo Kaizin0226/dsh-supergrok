@@ -4,13 +4,13 @@
   "version": "0.8.0",
   "targetTemplate": "<DSH_DATA_DIR>/.agent-presets/grok-optimized",
   "fileCount": 2,
-  "totalBytes": 11939,
-  "treeSha256": "26A17902ACBCA860DE38C4C60D2741E67984FA10C1FD4E3B48073224F54DC517",
+  "totalBytes": 12028,
+  "treeSha256": "74DD7039C4F5BE49D7205A5E36AD71DC04D720C847309BCD35B0A8B688CE7632",
   "files": [
     {
       "name": "agent.cordis.yml",
-      "bytes": 11777,
-      "sha256": "96C021F6789B4F0F364BFD246F7F6837E5F06A8794196A571540F0A22E546C0F"
+      "bytes": 11866,
+      "sha256": "152BC91751D1D419252EC017D1CDAC18AF208B1071A413E3828747EDE206AE2C"
     },
     {
       "name": "preset.yml",

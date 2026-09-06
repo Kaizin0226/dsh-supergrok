@@ -1,3 +1,7 @@
+# Historical xAI API contract
+
+This directory is retained for historical reference and offline regression tests. It is not part of the SuperGrok OAuth build, installation or authentication route.
+
 # xAI / DSH offline contracts
 
 This directory contains synthetic protocol fixtures, a pending empty model-directory snapshot, a reviewed exact-version overlay, and parameterized rollout tooling. It contains no API key, OAuth grant, live model response, production settings, host snapshot, local hash baseline, canary evidence, or rollback record.
