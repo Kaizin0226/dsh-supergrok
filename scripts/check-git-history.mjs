@@ -1,25 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { basename, extname } from 'node:path';
 
-const forbiddenBasenames = new Set([
-  '.env',
-  'auth.json',
-  'bridge.config.json',
-  'manifest.json',
-  'settings.yaml',
-  'settings.yml',
-]);
-const forbiddenExtensions = new Set([
-  '.db', '.dmp', '.dpapi', '.dump', '.key', '.log', '.p12', '.pem', '.pfx',
-  '.har', '.pcap', '.sqlite', '.sqlite3', '.tgz', '.zip',
-]);
-const secretRules = [
-  { name: 'private key block', pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g },
-  { name: 'Bearer credential', pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]{12,}/gi },
-  { name: 'provider-shaped API key', pattern: /\b(?:xai-|sk-)[A-Za-z0-9]{20,}/g },
-  { name: 'GitHub token', pattern: /\b(?:ghp|github_pat)_[A-Za-z0-9_]{16,}/g },
-  { name: 'OAuth token field with literal value', pattern: /["'](?:access_token|refresh_token)["']\s*:\s*["'](?!(?:access_token|refresh_token)["'])[^"']{16,}["']/gi },
-];
+import { forbiddenBasenames, forbiddenExtensions, scanBytes, scanText } from './safety-rules.mjs';
 
 function git(args, encoding = 'utf8') {
   return execFileSync('git', args, { encoding, windowsHide: true });
@@ -44,6 +26,23 @@ const objects = git(['rev-list', '--objects', '--all'])
 
 const findings = [];
 const scanned = new Set();
+const commits = git(['log', '--all', '--format=%H%x00%an%x00%ae%x00%cn%x00%ce%x00%B%x00%x00']).split('\0\0').filter(record => record.trim());
+for (const record of commits) {
+  const [sha, author, authorEmail, committer, committerEmail, message] = record.trimStart().split('\0');
+  for (const finding of scanText(message ?? '')) findings.push(`${sha}: commit message: ${finding}`);
+  for (const [name, email] of [[author, authorEmail], [committer, committerEmail]]) {
+    if (['Chas', 'Kaizin0226'].includes(name) && email !== '38362307+Kaizin0226@users.noreply.github.com') findings.push(`${sha}: maintainer email is not noreply`);
+  }
+}
+// Git stores link targets as blobs: scan them as text and reject absolute targets.
+for (const sha of git(['rev-list', '--all']).trim().split(/\r?\n/)) {
+  for (const line of git(['ls-tree', '-r', sha]).split(/\r?\n/)) {
+    if (!line.startsWith('120000 ')) continue;
+    const object = line.split(/\s+/)[2];
+    const target = git(['cat-file', 'blob', object]);
+    if (/^(?:[A-Za-z]:|[\\/])/.test(target) || scanText(target).length) findings.push(`${sha}: unsafe historical link target`);
+  }
+}
 for (const item of objects) {
   if (!item.path) continue;
   const name = basename(item.path).toLowerCase();
@@ -57,12 +56,8 @@ for (const item of objects) {
   const size = Number(git(['cat-file', '-s', item.object]).trim());
   if (!Number.isSafeInteger(size) || size > 2 * 1024 * 1024) continue;
   const bytes = git(['cat-file', 'blob', item.object], null);
-  if (bytes.includes(0)) continue;
-  const content = bytes.toString('utf8');
-  for (const rule of secretRules) {
-    rule.pattern.lastIndex = 0;
-    if (rule.pattern.test(content)) findings.push(`${item.object} ${item.path}: ${rule.name}`);
-  }
+  try { for (const finding of scanBytes(bytes, extname(name))) findings.push(`${item.object} ${item.path}: ${finding}`); }
+  catch (error) { findings.push(`${item.object} ${item.path}: ${error.message}`); }
 }
 
 if (findings.length > 0) {

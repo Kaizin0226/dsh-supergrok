@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, globSync, mkdirSync, openSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve, join } from 'node:path';
+import { delimiter, dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -18,6 +18,9 @@ const source = join(work, 'upstream');
 const tools = join(work, 'tools');
 const artifacts = join(work, 'artifacts');
 const environment = { ...process.env, DSH_TELEMETRY_DISABLED: '1', CI: '1' };
+// Upstream scripts invoke pnpm again by name. Use our pinned bootstrap in all children.
+const pathKey = Object.keys(environment).find(key => key.toLowerCase() === 'path') ?? 'PATH';
+environment[pathKey] = join(tools, 'node_modules', '.bin') + delimiter + (environment[pathKey] ?? '');
 environment.npm_config_cache = join(work, 'npm-cache');
 environment.DSH_CLIENT_COMMIT_HASH = lock.commit;
 for (const key of Object.keys(environment)) if (/API_KEY|ACCESS_TOKEN|REFRESH_TOKEN|SECRET|AUTHORIZATION/i.test(key)) delete environment[key];
