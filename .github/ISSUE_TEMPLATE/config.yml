@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security reporting / 安全反馈
+    url: https://github.com/Kaizin0226/dsh-supergrok/blob/main/SECURITY.md
+    about: Follow private reporting instructions; never disclose vulnerabilities in a public issue. / 遵循私密反馈流程，不在公开 Issue 披露漏洞。

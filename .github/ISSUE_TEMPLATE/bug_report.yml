@@ -1,0 +1,37 @@
+name: Bug report / 问题反馈
+description: A minimal synthetic reproduction / 最小合成复现
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never attach credentials, settings, full logs, real chats or account screenshots.
+        不得附凭据、设置、完整日志、真实聊天或账户截图。
+        For vulnerabilities, follow SECURITY.md; do not disclose details here.
+        漏洞请按 SECURITY.md 私密反馈，不在此披露细节。
+  - type: input
+    id: versions
+    attributes:
+      label: Versions / 版本
+      description: Windows, Node.js, provider, preset and DSH versions only; no device identifiers or paths. / 仅填 Windows、Node.js、provider、preset 和 DSH 版本，不填设备标识或路径。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Synthetic reproduction / 合成复现
+      description: Minimal steps with invented data, expected and actual behavior. / 使用虚构数据的最小步骤，以及预期和实际行为。
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error summary / 错误摘要
+      description: Error code and a short redacted summary; no raw logs or account data. / 错误代码及简短脱敏摘要，不贴原始日志或账户数据。
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy / 隐私
+      options:
+        - label: I used synthetic data with no credentials or private runtime material. / 我使用合成数据，未包含凭据或私有运行资料。
+          required: true

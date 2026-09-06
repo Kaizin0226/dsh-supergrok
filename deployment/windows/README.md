@@ -1,5 +1,11 @@
 # Windows build, installation and rollback
 
+[简体中文](README.zh.md)
+
+Developer preview: read the [service-access limitations](../../docs/SERVICE-ACCESS.md)
+before any real login. The release validates offline installation/composition;
+the sign-in and launch commands below are manual user operations, not CI steps.
+
 Requires Node.js 24, Git, PowerShell, and the Windows `tar` command. Run these
 commands from the checkout. All example paths are derived from the current
 checkout; choose separate destinations appropriate to your machine. No command

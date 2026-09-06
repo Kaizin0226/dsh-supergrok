@@ -2,11 +2,14 @@
 
 [English](README.md)
 
+**开发者预览版 · 非官方实验性集成。** 面向能够自行构建和排查 Windows＋Node.js 24 环境的开发者。
+尚非稳定正式版，也不代表第三方 OAuth 客户端已获官方支持。
+
 将你的 SuperGrok 订阅通过 OAuth 登录接入 DeepSeek Harness（DSH），并提供专属 Grok 优化模式。
 通过自己的 DSH 登录授权，无需 xAI API key；可用模型与 reasoning 选项以账户实时目录和兼容安装为准。
 
 仓库包含 provider、Grok 预设、原生工作状态与历史图片扩展，以及可复现的 DSH 核心补丁。
-首版安装支持 **Windows + Node.js 24**。本次保持仓库私有，改变可见性另行决定。
+首版安装支持 **Windows + Node.js 24**，提供源码与构建、安装工具；不发布 npm 包或预编译发行附件。
 
 ## 兼容组合
 
@@ -36,7 +39,7 @@
 ## 构建、安装与验证
 
 干净检出后先运行 `npm ci --ignore-scripts`、`npm run verify`。
-[Windows 指南](deployment/windows/README.md) 提供完整构建、安装、初始化、启动及回滚命令。
+[Windows 指南](deployment/windows/README.zh.md) 提供完整构建、安装、初始化、启动及回滚命令。
 构建输出位于明确指定的仓库外目录，不依赖已安装的 DSH、私有压缩包或个人 staging 路径。
 安装默认 dry-run，应用时验证输入哈希和精确目标；先安装候选目录，再可恢复替换。
 数据初始化仅支持新目录，保留既有会话与设置，工具不管理 DSH 进程。
@@ -51,3 +54,16 @@ Bridge 是可选配套，需要按实际安装包哈希另行配置本地信任�
 原 [MIT 版权声明](LICENSE) 保留，自有新增内容沿用 MIT；适用的 Grok Build 衍生内容保留
 [Apache-2.0 许可与署名](THIRD-PARTY-NOTICES.md)。源码许可不代表订阅授权或服务使用授权。
 本项目是独立集成。
+
+## 接入边界与已知限制
+
+登录前请阅读[服务接入评估](docs/SERVICE-ACCESS.md)。源码许可及登录成功均不构成第三方服务接入授权。
+上游协议与账户资格可能变化。本次发行尚未完成真实 OAuth、模型推理、图片推理及生产额度面板的线上验收。
+macOS／Linux 和既有数据迁移不属于首版支持流程；不承诺持续可用或生产支持。
+
+## 贡献与反馈
+
+请参阅[贡献指南](CONTRIBUTING.md)、[私密安全反馈](SECURITY.md)、[预览版说明](docs/RELEASE-NOTES.md)
+和[公开流程](docs/PUBLIC-RELEASE.md)，相关指南均提供中英文。
+普通 Issue 只提交最小合成复现，漏洞通过私密渠道反馈。维护采取尽力而为原则，
+不承诺响应时间，也不扩大到兼容表之外的组合。

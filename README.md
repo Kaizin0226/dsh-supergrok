@@ -2,6 +2,10 @@
 
 [简体中文](README.zh.md)
 
+**Developer preview · unofficial experimental integration.** For developers
+who can build and troubleshoot Windows + Node.js 24 setups. This is not a stable
+release or an officially supported third-party OAuth client.
+
 Use your SuperGrok subscription in DeepSeek Harness (DSH) via OAuth, with a
 dedicated Grok-optimized agent mode. Sign in with your own account inside DSH;
 no xAI API key is required. Available models and reasoning options come from
@@ -10,9 +14,9 @@ installation.
 
 This repository includes the OAuth provider, Grok preset, native work-state and
 historical-image extensions, and reproducible DSH core patches. The first
-supported installation target is Windows with **Node.js 24**. The repository
-remains private pending a separate visibility decision; the source and tooling
-are prepared for independent builds.
+supported installation target is Windows with **Node.js 24**. This preview
+provides source and build/install tools, without precompiled release downloads
+or npm publication.
 
 ## Components
 
@@ -68,6 +72,13 @@ acceptance. See [validation and public-release checklist](docs/VALIDATION.md).
 
 ## Boundaries
 
+Read the [service-access review](docs/SERVICE-ACCESS.md) before signing in.
+Source licensing and successful login do not establish third-party service
+authorization. Protocols and account eligibility can change. Live OAuth, model
+and image inference, and the production usage-panel UI have not been accepted
+for this release. macOS/Linux and existing data migration are outside the
+supported preview workflow. No availability or production-support promise is made.
+
 DSH owns credentials, sessions, permission enforcement and native tools. Bridge
 is optional: configure its local trust using the hashes of the installed
 release; an older fixed trust hash does not authorize this package. This
@@ -78,3 +89,12 @@ and are excluded from the default build/install route.
 Preserve the original [MIT license](LICENSE), [NOTICE](NOTICE), and applicable
 [third-party licenses](THIRD-PARTY-NOTICES.md). Code licensing does not grant
 subscription access or service authorization. This is an independent integration.
+
+## Contributing and support
+
+See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md),
+[preview release notes](docs/RELEASE-NOTES.md) and the
+[public-release procedure](docs/PUBLIC-RELEASE.md), available in English and
+Simplified Chinese. Issues should contain minimal synthetic reproductions only;
+report vulnerabilities privately. Maintenance is best-effort, without a response
+time or compatibility guarantee beyond the documented tested combination.

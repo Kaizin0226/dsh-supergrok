@@ -32,3 +32,25 @@ graph in its own package-lock and checksums all installation inputs.
 See [third-party notices](THIRD-PARTY-NOTICES.md). This repository contains only
 selected source, tests and general documentation. Task transcripts, production
 reports, authentication state and reference-clone contents are not build inputs.
+
+## 中文：固定源码来源
+
+上表按精确提交锁定四类来源：原 provider `0.2.10`、DSH `dsh-v0.1.2-rc.1`、
+初始 OAuth／协议参考 `1.0.12`，以及 persona 的 Grok Build 参考快照。链接与提交在两种语言中共用。
+
+公开适配将 provider 从 `0.6.0-hardened.1` 提升至 `0.7.0-hardened.1`，区分显式代理契约；
+preset 保持 `0.8.0`，核心补丁组合保持 `0.1.2-rc.1.grok.2`。
+[源码锁](patches/dsh/source.lock.json)记录精确 DSH 提交、补丁及包版本。
+安装使用未改动的上游 CLI `0.1.2-rc.1` 配合五个从源码构建的核心包；组合标签不是新发布的 CLI 包。
+
+`OAUTH_CLIENT_ID` 是固定 device-flow 参考中的公开客户端标识，不是密钥或授权。
+origin、路径、方法、重定向处理和客户端身份固定在 `lib/constants.js` 与 `lib/net.js`。
+provider 标识为 `dsh-supergrok-oauth-hardened/0.7.0-hardened.1`；token 仅来自用户自己在 DSH 中的登录，
+不读取官方客户端凭据存储。
+
+`npm run source-hash` 计算检出源码树，`npm run canonical-hash` 计算包含 shrinkwrap 和加固声明的
+provider 运行负载。两者用于完整性校验，不表示现有 Bridge 已信任此发行。
+provider 包含 `npm-shrinkwrap.json`；安装组合另用完整依赖锁固定运行图，并校验所有安装输入。
+
+参见[第三方说明](THIRD-PARTY-NOTICES.md)。仓库仅包含选定源码、测试与通用文档；
+任务全文、生产报告、认证状态和参考克隆内容不作为构建输入。

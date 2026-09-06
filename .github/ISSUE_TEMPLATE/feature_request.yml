@@ -1,0 +1,10 @@
+name: Feature proposal / 功能建议
+description: Discuss a focused improvement / 讨论聚焦的改进
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Use case and proposal / 使用场景与建议
+      description: Describe intended behavior with invented examples, without private data. / 用虚构示例说明期望行为，不包含私有数据。
+    validations:
+      required: true
