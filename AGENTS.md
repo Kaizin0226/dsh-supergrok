@@ -10,7 +10,7 @@ These rules apply to every task in this Git repository.
 - Deployment scripts must default to dry-run, require explicit paths, revalidate exact targets, use recoverable moves, verify hashes, and never control DSH processes or edit unrelated settings.
 - Keep the Grok Build reference clone outside this repository. Record only its reviewed repository, commit, and package version in provenance and component locks.
 - Do not bypass repository safety scans, Git hooks, or provider security tests.
-- Keep public documentation in English and Simplified Chinese; preserve original license texts.
+- Keep public documentation in English and Simplified Chinese; preserve original license texts. Put both README languages in the same README.md with language anchors, not separate language files.
 
 ## 中文
 
@@ -21,4 +21,4 @@ These rules apply to every task in this Git repository.
 - 测试使用临时目录、模拟服务、合成目录及不符合真实厂商格式的凭据值。
 - 安装默认 dry-run；显式提供路径、复核目标、使用可恢复移动并校验哈希，不管理 DSH 进程或改动无关设置。
 - Grok Build 参考克隆留在仓库外；来源及组件锁只记录已审核的仓库、提交和版本。
-- 不绕过安全扫描、Git hooks 或 provider 安全测试。公开文档保持中英双语，许可证保留原文。
+- 不绕过安全扫描、Git hooks 或 provider 安全测试。公开文档保持中英双语，许可证保留原文。README 的两种语言放在同一 README.md 中，以锚点跳转，不拆分语言文件。

@@ -27,9 +27,7 @@
     "src/**/*.ts",
     "tests/**/*.ts",
     "tsconfig.json",
-    "README.md",
-    "README.zh.md",
-    "README.i18n.yaml"
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

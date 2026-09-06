@@ -17,7 +17,8 @@ and never add live-service calls to CI. Use your own GitHub noreply address if
 you do not want a personal email in public commit history.
 
 Maintain English and Simplified Chinese documentation with matching commands,
-versions and limitations. Preserve original license texts. Update provenance
+versions and limitations. Keep both README languages in one README.md with
+language anchors. Preserve original license texts. Update provenance
 and locks when their inputs change; do not suppress mismatches. Use issues for
 minimal synthetic reproductions and focused feature proposals, without real
 logs, settings, conversations or account screenshots. Follow [SECURITY.md](SECURITY.md)
@@ -35,7 +36,7 @@ Maintenance is best-effort; untested combinations are not supported.
 测试清除真实凭据并使用合成数据，不在 CI 调用真实服务。若不想公开个人邮箱，
 请为自己的提交使用自己的 GitHub noreply 邮箱。
 
-文档保持中英双语，命令、版本和限制相互对应，许可证保留原文。
+文档保持中英双语，命令、版本和限制相互对应；README 两种语言放在同一 README.md 中，以锚点跳转，许可证保留原文。
 来源与锁定输入变化时同步更新声明，不屏蔽不一致。Issue 仅提供最小合成复现或聚焦功能建议，
 不附真实日志、设置、聊天或账户截图。漏洞按 [SECURITY.md](SECURITY.md) 私密反馈。
 大功能先讨论再投入；维护尽力而为，不承诺未经验证组合的支持。

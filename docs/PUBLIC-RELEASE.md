@@ -4,7 +4,10 @@
 
 Target: `suite-v0.7.0-preview.1`, source-only developer preview. Keep the name
 `dsh-supergrok` and prefer the existing repository. Unresolved historical privacy
-remnants mean staying private, without automatic recreation, migration or renaming.
+remnants mean staying private unless the owner explicitly accepts identified
+non-secret identity metadata exposure; record that decision outside Git.
+Credentials and private runtime material must still be excluded. Do not
+automatically recreate, migrate or rename the repository.
 Preparation and a draft release do not authorize visibility changes or publication;
 the owner separately approves the final concrete candidate.
 
@@ -41,7 +44,8 @@ or forks. See [GitHub visibility effects](https://docs.github.com/en/repositorie
 ## 中文
 
 目标为 `suite-v0.7.0-preview.1` 源码开发者预览版。保留 `dsh-supergrok` 名称，优先原仓库。
-历史隐私残留未解决时继续私有，不自动重建、迁移或改名。准备工作与 Release 草稿不授权改变
+历史隐私残留未解决时继续私有，除非所有者明确接受已识别的非凭据身份元数据公开；该决定记录在 Git 外。
+凭据及私有运行资料仍须排除，不自动重建、迁移或改名。准备工作与 Release 草稿不授权改变
 可见性或正式发布；最终可审核候选由所有者单独确认。
 
 请求最终决定前：
