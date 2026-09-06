@@ -8,6 +8,12 @@
 who can build and troubleshoot Windows + Node.js 24 setups. This is not a stable
 release or an officially supported third-party OAuth client.
 
+**DSH compatibility: `0.1.2-rc.1` with this repository's required core patches,
+producing core combination `0.1.2-rc.1.grok.2`.** Other DSH versions have not been
+validated. Use this repository's [build and installation workflow](deployment/windows/README.md#english)
+to install the complete compatible combination; installing only the provider into
+an unpatched DSH installation does not supply the full integration.
+
 Use your SuperGrok subscription in DeepSeek Harness (DSH) via OAuth, with a
 dedicated Grok-optimized agent mode. Sign in with your own account inside DSH;
 no xAI API key is required. Available models and reasoning options come from
@@ -105,6 +111,11 @@ time or compatibility guarantee beyond the documented tested combination.
 
 **开发者预览版 · 非官方实验性集成。** 面向能够自行构建和排查 Windows＋Node.js 24 环境的开发者。
 尚非稳定正式版，也不代表第三方 OAuth 客户端已获官方支持。
+
+**DSH 适配基线为 `0.1.2-rc.1`，必须搭配本仓库核心补丁；构建后的核心组合版本为
+`0.1.2-rc.1.grok.2`。** 其他 DSH 版本尚未验证。请使用本仓库的
+[构建与安装流程](deployment/windows/README.md#简体中文)安装完整兼容组合；
+仅在未打补丁的原版 DSH 中安装 provider，无法获得本项目的完整集成功能。
 
 将你的 SuperGrok 订阅通过 OAuth 登录接入 DeepSeek Harness（DSH），并提供专属 Grok 优化模式。
 通过自己的 DSH 登录授权，无需 xAI API key；可用模型与 reasoning 选项以账户实时目录和兼容安装为准。

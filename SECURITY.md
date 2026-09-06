@@ -15,6 +15,13 @@ DSH `0.1.2-rc.1.grok.2` combination in the README. Older releases and other
 combinations are not maintained by this preview. Responses are best-effort,
 without a response-time commitment.
 
+The suite's test tooling now pins Vitest `4.1.11`, fixing
+[GHSA-5xrq-8626-4rwp](https://github.com/advisories/GHSA-5xrq-8626-4rwp).
+The initial `suite-v0.7.0-preview.1` source used affected Vitest `4.0.18` for
+extension development. Use the corrected preview for development; do not enable
+Vitest UI, Browser Mode or a network-exposed API on the initial preview.
+The documented test commands use run mode and the installed runtime excludes Vitest.
+
 After public release, use [Report a vulnerability](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new).
 Administrators must enable private vulnerability reporting when making the
 repository public and verify this link before announcing the release. The
@@ -41,6 +48,12 @@ Issue 不得包含凭据或生产证据。
 
 安全维护范围为 README 中的 provider `0.7.0-hardened.1`、preset `0.8.0` 和 DSH
 `0.1.2-rc.1.grok.2` 组合；本预览版不维护旧版或其他组合。反馈采取尽力而为原则，不承诺响应时间。
+
+配套测试工具现固定为 Vitest `4.1.11`，已修复
+[GHSA-5xrq-8626-4rwp](https://github.com/advisories/GHSA-5xrq-8626-4rwp)。
+首个 `suite-v0.7.0-preview.1` 源码的扩展开发依赖使用了受影响的 Vitest `4.0.18`。
+开发时请使用修正后的预览版；不要在首版上启用 Vitest UI、Browser Mode 或向网络开放 API。
+文档中的测试命令使用 run 模式，安装后的运行环境不包含 Vitest。
 
 公开后使用 [Report a vulnerability／私密漏洞报告](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new)。
 管理员须在公开时启用功能，并在宣布发布前验证入口；仓库仍私有时不宣称该入口已启用。

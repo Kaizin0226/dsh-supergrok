@@ -44,7 +44,7 @@
     "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
     "@deepseek-ai/dsh-session": "0.1.2-rc.1.grok.1",
     "typescript": "5.9.3",
-    "vitest": "4.0.18"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24 <25"

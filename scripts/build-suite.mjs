@@ -66,7 +66,7 @@ if (values.phase === 'all' || values.phase === 'prepare') {
     '@deepseek-ai/cordis-plugin-include': '1.0.7',
   });
   save(join(kit, 'package.json'), { name: 'dsh-supergrok-build-kit', version: '0.7.0', private: true, type: 'module', dependencies, overrides,
-    devDependencies: { typescript: '5.9.3', vitest: '4.0.18', '@types/node': '24.13.3' } });
+    devDependencies: { typescript: '5.9.3', vitest: '4.1.11', '@types/node': '24.13.3' } });
   cpSync(join(root, 'presets'), join(kit, 'presets'), { recursive: true });
   lockedGraph('suite-kit.lock.json', kit, core);
   run([npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund']);
