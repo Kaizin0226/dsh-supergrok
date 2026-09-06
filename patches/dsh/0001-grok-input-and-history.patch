@@ -1,0 +1,1474 @@
+diff --git a/docs/architecture.i18n.yaml b/docs/architecture.i18n.yaml
+index 9516e43c8a..54b3bf2dec 100644
+--- a/docs/architecture.i18n.yaml
++++ b/docs/architecture.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write docs/architecture.md
+-architecture.md: ea1719b68e1109ca5446699a59ebb503f7f989e2
+-architecture.zh.md: 3e7bbe7d51559d91858ba1062656c36bb390ec96
++architecture.md: 038ec585f6ef4ab4c72131c749831bba07c7e65d
++architecture.zh.md: 989ffd064fce3115afba29ce27927a7c7479b97b
+diff --git a/docs/architecture.md b/docs/architecture.md
+index ea1719b68e..038ec585f6 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -84,7 +84,8 @@ turn/start
+      step/start
+      append entered messages as user/message
+      derive model history from the log
+-     agent/request -> llm/stream -> assistant/chunk* -> assistant/message
++     agent/request -> optional input preparation -> logged plugin notices
++     llm/stream -> assistant/chunk* -> assistant/message
+      tool/call* -> tools/pre-execute -> tools/execute -> tools/post-execute -> tool/result*
+      step/end
+      tools owe another request, or next-step input arrived -> claim -> next step
+@@ -96,6 +97,8 @@ turn/end
+ 
+ Input reaches the driver through one inbox. Some messages wake it immediately; injected context waits in the inbox until another message does.
+ 
++An adapter's optional prepared-input operation returns transformation notices without inference I/O. The driver commits them as plugin-source `user/message` records before deriving the final request; notices already present in the current message surface are not repeated. Prepared attachment bytes remain inside the same registration-bound adapter call, not in the log.
++
+ `agent/pre-step` decides what the model sees. Listeners may rewrite the claimed messages or reject them outright; a rejected or empty first claim still closes a durable turn that spent no step, so the log records the attempt. An enter decision may also set `startsRequestSeries` to begin a distinct model-message series: the loop then logs a fresh `request/header` (reason `series`, or `change` carrying `startsSeries: true` when the envelope changed too). A listener that rebuilds a downstream enter decision must spread it (`{ ...decision, messages }`) so the declaration survives. Each step reads the prompt sections and tool schemas that plugins registered.
+ 
+ Details: the [sequence diagram](agent-lifecycle.md), the [tool pipeline](tool-execution-pipeline.md), and [cancellation and error recovery](subsystems/core.md#the-agent-handle).
+diff --git a/docs/architecture.zh.md b/docs/architecture.zh.md
+index 3e7bbe7d51..989ffd064f 100644
+--- a/docs/architecture.zh.md
++++ b/docs/architecture.zh.md
+@@ -88,7 +88,8 @@ turn/start
+      step/start
+      append entered messages as user/message
+      derive model history from the log
+-     agent/request -> llm/stream -> assistant/chunk* -> assistant/message
++     agent/request -> optional input preparation -> logged plugin notices
++     llm/stream -> assistant/chunk* -> assistant/message
+      tool/call* -> tools/pre-execute -> tools/execute -> tools/post-execute -> tool/result*
+      step/end
+      tools owe another request, or next-step input arrived -> claim -> next step
+@@ -100,6 +101,8 @@ turn/end
+ 
+ 输入通过同一个 inbox 到达驱动器。有些消息会立即唤醒它；注入的上下文会留在 inbox 中，直到另一条消息将其唤醒。
+ 
++适配器可选的输入准备操作在不发起推理请求的情况下返回变换提示。驱动器先将其作为插件来源的 `user/message` 写入日志，再派生最终请求；当前消息视图中已有的提示不会重复添加。准备好的附件字节保留在同一个绑定适配器的调用内部，不进入日志。
++
+ `agent/pre-step` 决定模型看到什么。监听器可以改写已领取的消息，也可以直接拒绝它们；首次领取被拒绝或被改写为空时，仍会关闭一个不含步骤的持久轮次，因此日志会记录这次尝试。enter 决策还可以设置 `startsRequestSeries` 来开启独立的模型消息序列：loop 会随之记录一个新的 `request/header`（原因为 `series`，或在封装同时变化时为携带 `startsSeries: true` 的 `change`）。重建下游 enter 决策的监听器必须展开它（`{ ...decision, messages }`），该声明才能存活。每个步骤读取插件注册的提示词片段和工具 schema。
+ 
+ 详情见[时序图](agent-lifecycle.zh.md)、[工具流水线](tool-execution-pipeline.zh.md)和[取消与错误恢复](subsystems/core.zh.md#the-agent-handle)。
+diff --git a/docs/subsystems/llm-streaming.i18n.yaml b/docs/subsystems/llm-streaming.i18n.yaml
+index ea90fbb43d..5511495408 100644
+--- a/docs/subsystems/llm-streaming.i18n.yaml
++++ b/docs/subsystems/llm-streaming.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write docs/subsystems/llm-streaming.md
+-llm-streaming.md: 6867ae292d77474bcedc1466ae0ce6b1fc1c92d3
+-llm-streaming.zh.md: b75e24f2e9010b4fb08c035f14bc4e91dc3971ef
++llm-streaming.md: 14076132aecade7b31d939257eeef21c79b6cebd
++llm-streaming.zh.md: 967be76d8cd591657e2a8d700dc8745a44b1ec85
+diff --git a/docs/subsystems/llm-streaming.md b/docs/subsystems/llm-streaming.md
+index 6867ae292d..14076132ae 100644
+--- a/docs/subsystems/llm-streaming.md
++++ b/docs/subsystems/llm-streaming.md
+@@ -6,6 +6,10 @@ The conversation and streaming types from [`packages/llm`](../../packages/llm/RE
+ 
+ Source: [`packages/llm/llm/src/types.ts`](../../packages/llm/llm/src/types.ts)
+ 
++## Prepared input notices
++
++`PreparedAdapterCall` and `PreparedLlmCall` optionally expose `prepareInput(options)`, returning `InputPreparationNotice` values (`key`, `summary`, `text`). The operation prepares route-specific inputs without inference I/O; it neither changes the caller's messages nor persists content. A prepared call exposing this operation refuses dispatch until preparation succeeds. The host commits notices as plugin-source messages and derives the final request from its session log. Unchanged adapters omit the operation. The interfaces are owned by [`llm/src/index.ts`](../../packages/llm/llm/src/index.ts).
++
+ <a id="content-blocks-and-messages"></a>
+ 
+ ## Content blocks and messages
+diff --git a/docs/subsystems/llm-streaming.zh.md b/docs/subsystems/llm-streaming.zh.md
+index b75e24f2e9..967be76d8c 100644
+--- a/docs/subsystems/llm-streaming.zh.md
++++ b/docs/subsystems/llm-streaming.zh.md
+@@ -6,6 +6,10 @@
+ 
+ 源码：[`packages/llm/llm/src/types.ts`](../../packages/llm/llm/src/types.ts)
+ 
++## 输入准备提示
++
++`PreparedAdapterCall` 和 `PreparedLlmCall` 可选提供 `prepareInput(options)`，返回 `InputPreparationNotice`（`key`、`summary`、`text`）。此操作在不发起推理请求的情况下准备当前路由的输入，既不改写调用者消息，也不持久化内容。提供该操作的准备调用在输入准备成功前拒绝发送。host 将提示作为插件来源消息提交，再从会话日志派生最终请求。未变更的适配器不提供此操作。接口由 [`llm/src/index.ts`](../../packages/llm/llm/src/index.ts) 定义。
++
+ <a id="content-blocks-and-messages"></a>
+ 
+ ## 内容块与消息
+diff --git a/packages/api/session-controller/src/catalog.ts b/packages/api/session-controller/src/catalog.ts
+index 0c97107f03..2bcd05e1fe 100644
+--- a/packages/api/session-controller/src/catalog.ts
++++ b/packages/api/session-controller/src/catalog.ts
+@@ -40,6 +40,14 @@ export async function buildModelCatalog(
+           name: model.name,
+           ...(model.description === undefined ? {} : { description: model.description }),
+           ...(reasoning === undefined ? {} : { reasoning }),
++          ...(resolved.inputModalities === undefined
++            ? {}
++            : { inputModalities: [...resolved.inputModalities] }),
++          ...(resolved.backend === undefined ? {} : { backend: resolved.backend }),
++          ...(resolved.capabilityProvenance === undefined
++            ? {}
++            : { capabilityProvenance: resolved.capabilityProvenance }),
++          ...(resolved.catalogRevision === undefined ? {} : { catalogRevision: resolved.catalogRevision }),
+         }
+       }))
+       return {
+diff --git a/packages/api/session-controller/src/commands.ts b/packages/api/session-controller/src/commands.ts
+index 0e8015f79c..68e3aae04c 100644
+--- a/packages/api/session-controller/src/commands.ts
++++ b/packages/api/session-controller/src/commands.ts
+@@ -120,19 +120,20 @@ export class SessionCommandController {
+     const agent = await this.resolveAgent(request.sessionId)
+     return this.agents.serializeImageAdmission(agent, async () => {
+       try {
+-        const resolved = await this.ctx.llm.resolveCallConfig({
++        const resolved = await this.ctx.llm.resolveCallConfigInfo({
+           provider: request.provider,
+           model: request.model,
+           ...(request.reasoningEffort === undefined
+             ? {}
+             : { reasoningEffort: ReasoningEffortId(request.reasoningEffort) }),
+         })
++        const config = resolved.config
+         const selected: AgentModelSelection = {
+-          provider: resolved.provider,
+-          model: resolved.model,
+-          ...(resolved.reasoningEffort === undefined
++          provider: config.provider,
++          model: config.model,
++          ...(config.reasoningEffort === undefined
+             ? {}
+-            : { reasoningEffort: resolved.reasoningEffort }),
++            : { reasoningEffort: config.reasoningEffort }),
+         }
+         this.agents.selectForNextRequest(agent, selected)
+         try {
+@@ -142,7 +143,17 @@ export class SessionCommandController {
+             `session-controller: model selection changed for the Session but the default was not saved: ${String(error)}`,
+           )
+         }
+-        return { selected: { ...selected } }
++        return {
++          selected: { ...selected },
++          ...(resolved.inputModalities === undefined
++            ? {}
++            : { inputModalities: [...resolved.inputModalities] }),
++          ...(resolved.backend === undefined ? {} : { backend: resolved.backend }),
++          ...(resolved.capabilityProvenance === undefined
++            ? {}
++            : { capabilityProvenance: resolved.capabilityProvenance }),
++          ...(resolved.catalogRevision === undefined ? {} : { catalogRevision: resolved.catalogRevision }),
++        }
+       } catch (error) {
+         if (remoteErrorOf(error) !== undefined) throw error
+         throw new RemoteError(
+@@ -316,7 +327,10 @@ export class SessionCommandController {
+         if (hasImage) {
+           const current = this.agents.selectionFor(agent).current
+           const model = await this.ctx.llm.resolveModelInfo(current.provider, current.model)
+-          if (model.inputModalities !== undefined && !model.inputModalities.includes('image')) {
++          // Fail closed: only an explicitly advertised image modality admits
++          // image intake. Live-catalog providers may omit modalities until a
++          // fresh preflight; admitting on omission would bypass the catalog.
++          if (model.inputModalities?.includes('image') !== true) {
+             throw new RemoteError(
+               'session/attachment-invalid',
+               `Model "${current.model}" does not support image input.`,
+diff --git a/packages/api/session-controller/src/types.ts b/packages/api/session-controller/src/types.ts
+index 2e2a0d7c46..e32400abf7 100644
+--- a/packages/api/session-controller/src/types.ts
++++ b/packages/api/session-controller/src/types.ts
+@@ -5,7 +5,7 @@ import type {
+ } from '@deepseek-ai/dsh-attachment'
+ import type { Branded } from '@deepseek-ai/dsh-brand'
+ import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
+-import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
++import type { ContentBlock, LlmBackend, ModelModality } from '@deepseek-ai/dsh-llm/types'
+ import type { ChunkRow } from '@deepseek-ai/dsh-session/chunk-rows'
+ import type { SessionId } from '@deepseek-ai/dsh-session/types'
+ import type { SessionProjectionMap } from '@deepseek-ai/dsh-session-projection/types'
+@@ -120,6 +120,14 @@ export interface ModelCatalogModel {
+   readonly name: string
+   readonly description?: string
+   readonly reasoning?: ModelReasoning
++  /** Exact-route accepted input modalities; absence means not advertised. */
++  readonly inputModalities?: readonly ModelModality[]
++  /** Adapter backend family for this exact route; absence means unknown. */
++  readonly backend?: LlmBackend
++  /** Provenance of the exact route's capability facts. */
++  readonly capabilityProvenance?: string
++  /** Opaque revision of the catalog snapshot that supplied the facts. */
++  readonly catalogRevision?: string
+ }
+ 
+ /** One provider and its successfully loaded model catalog. */
+@@ -273,6 +281,10 @@ export interface SessionSelectModelRequest extends ModelSelection {
+ /** Accepted model selection after Host resolution. */
+ export interface SessionSelectModelValue {
+   readonly selected: ModelSelection
++  readonly inputModalities?: readonly ModelModality[]
++  readonly backend?: LlmBackend
++  readonly capabilityProvenance?: string
++  readonly catalogRevision?: string
+ }
+ 
+ /** Session rename request. */
+diff --git a/packages/api/session-controller/tests/session-models.host.spec.ts b/packages/api/session-controller/tests/session-models.host.spec.ts
+index cd26dfb39d..62d7ac15ad 100644
+--- a/packages/api/session-controller/tests/session-models.host.spec.ts
++++ b/packages/api/session-controller/tests/session-models.host.spec.ts
+@@ -13,7 +13,8 @@ import AttachmentStore from '@deepseek-ai/dsh-attachment'
+ import LlmRuntime, { LlmAdapter, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+ import type {
+   GenerateOptions, LlmCallConfig, LlmCallConfigAdapterDefaults, LlmModelInfo,
+-  LlmModelReasoningInfo, LlmProviderInfo, LlmResolvedModelInfo, StreamChunk,
++  LlmModelReasoningInfo, LlmProviderInfo, LlmResolvedModelInfo, ModelModality,
++  StreamChunk,
+   UserMessage,
+ } from '@deepseek-ai/dsh-llm'
+ import SessionStore from '@deepseek-ai/dsh-session'
+@@ -45,6 +46,7 @@ class CatalogAdapter extends LlmAdapter {
+     private readonly models: readonly LlmModelInfo[] | Error,
+     private readonly reasoning?: LlmModelReasoningInfo,
+     private readonly exactError?: Error,
++    private readonly modalities?: readonly ModelModality[],
+   ) {
+     super()
+   }
+@@ -66,6 +68,7 @@ class CatalogAdapter extends LlmAdapter {
+       id: model,
+       name: model,
+       ...this.reasoning === undefined ? {} : { reasoning: this.reasoning },
++      ...this.modalities === undefined ? {} : { inputModalities: [...this.modalities] },
+     })
+   }
+ 
+@@ -88,7 +91,7 @@ async function harness(logged?: {
+   model: string
+   reasoningEffort?: ReasoningEffortId
+   adapterDefaults?: LlmCallConfigAdapterDefaults
+-}): Promise<{
++}, imageCapable = false): Promise<{
+   ctx: Context
+   agent: Agent
+   sessionId: SessionId
+@@ -101,7 +104,7 @@ async function harness(logged?: {
+   ctx.llm.registerAdapter(['deepseek-official'], new CatalogAdapter('DeepSeek', [
+     { provider: 'deepseek-official', id: 'deepseek-chat', name: 'DeepSeek Chat' },
+     { provider: 'deepseek-official', id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', description: 'Reasoning model' },
+-  ], REASONING))
++  ], REASONING, undefined, imageCapable ? ['text', 'image'] : undefined))
+   ctx.llm.registerAdapter(['broken'], new CatalogAdapter('Broken Provider', new Error('catalog offline')))
+   ctx.llm.registerAdapter(['metadata-broken'], new CatalogAdapter('Metadata Broken', [
+     { provider: 'metadata-broken', id: 'listed', name: 'Listed' },
+@@ -158,8 +161,39 @@ function currentSelection(ctx: Context, sessionId: SessionId) {
+ }
+ 
+ describe('Web session model selection', () => {
+-  it('validates an ordered image batch before persisting any member', async () => {
++  it('rejects image prompts before storage or delivery when the exact model omits input modalities', async () => {
+     const { ctx, agent, sessionId } = await harness()
++    const saveImages = vi.fn(() => Promise.resolve([{
++      attachmentId: 'saved-image', mediaType: 'image/png' as const, bytes: 1, width: 1, height: 1,
++    }]))
++    ctx.provide('attachments', { saveImages } as never)
++    const followup = vi.fn()
++    Object.assign(agent, { followup })
++    const remote = createSessionTestRemote(ctx, {
++      defaultModelSelection: () => ({ provider: 'deepseek-official', model: 'deepseek-chat' }),
++      cwd: '/tmp',
++    })
++
++    try {
++      expect(await ctx.llm.resolveModelInfo('deepseek-official', 'deepseek-chat'))
++        .not.toHaveProperty('inputModalities')
++      expect(await remote.prompt(promptRequest({
++        sessionId,
++        mode: 'queue',
++        content: [{ type: 'image', mediaType: 'image/png', data: 'AQ==' }],
++      }))).toMatchObject({
++        ok: false,
++        error: { code: 'session/attachment-invalid', details: { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' } },
++      })
++      expect(saveImages).not.toHaveBeenCalled()
++      expect(followup).not.toHaveBeenCalled()
++    } finally {
++      await ctx.fiber.dispose()
++    }
++  })
++
++  it('validates an ordered image batch before persisting any member', async () => {
++    const { ctx, agent, sessionId } = await harness(undefined, true)
+     const validateImage = vi.fn((_input: { data: Uint8Array }) => Promise.resolve())
+     const saveImage = vi.fn((input: { data: Uint8Array; mediaType: 'image/png'; name?: string }) => Promise.resolve({
+       attachmentId: `att-${String(input.data[0])}`,
+@@ -228,7 +262,7 @@ describe('Web session model selection', () => {
+   })
+ 
+   it('delivers an admitted image batch through steer with the same ordered content as queue', async () => {
+-    const { ctx, agent, sessionId } = await harness()
++    const { ctx, agent, sessionId } = await harness(undefined, true)
+     const attachments = {
+       imageLimits: {
+         maxImageBytes: 4,
+@@ -387,7 +421,7 @@ describe('Web session model selection', () => {
+   })
+ 
+   it('preserves optional catalog metadata and string provider failures', async () => {
+-    const { ctx } = await harness()
++    const { ctx, sessionId } = await harness()
+     ctx.llm.registerAdapter(['plain'], new CatalogAdapter('Plain', [
+       { provider: 'plain', id: 'plain-model', name: 'Plain Model' },
+     ]))
+@@ -402,7 +436,22 @@ describe('Web session model selection', () => {
+         return Promise.reject('string catalog failure')
+       }
+     }('String Failure', []))
+-    createSessionTestRemote(ctx, {
++    ctx.llm.registerAdapter(['capability-rich'], new class extends CatalogAdapter {
++      override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
++        return Promise.resolve({
++          provider,
++          id: model,
++          name: model,
++          inputModalities: ['text', 'image'],
++          backend: 'responses',
++          capabilityProvenance: 'fixture-live-catalog',
++          catalogRevision: 'fixture-r1',
++        })
++      }
++    }('Capability Rich', [
++      { provider: 'capability-rich', id: 'vision', name: 'Vision' },
++    ]))
++    const remote = createSessionTestRemote(ctx, {
+       defaultModelSelection: () => ({ provider: 'deepseek-official', model: 'deepseek-chat' }),
+       cwd: '/tmp',
+     })
+@@ -421,10 +470,31 @@ describe('Web session model selection', () => {
+           },
+         }],
+       },
++      {
++        id: 'capability-rich',
++        name: 'Capability Rich',
++        models: [{
++          id: 'vision',
++          name: 'Vision',
++          inputModalities: ['text', 'image'],
++          backend: 'responses',
++          capabilityProvenance: 'fixture-live-catalog',
++          catalogRevision: 'fixture-r1',
++        }],
++      },
+     ]))
+     expect(catalog.failures).toContainEqual({
+       id: 'string-failure', name: 'String Failure', message: 'string catalog failure',
+     })
++    expect(expectValue(await remote.selectModel(request({
++      sessionId, provider: 'capability-rich', model: 'vision',
++    })))).toEqual({
++      selected: { provider: 'capability-rich', model: 'vision' },
++      inputModalities: ['text', 'image'],
++      backend: 'responses',
++      capabilityProvenance: 'fixture-live-catalog',
++      catalogRevision: 'fixture-r1',
++    })
+     await ctx.fiber.dispose()
+   })
+ 
+diff --git a/packages/core/agent-loop/README.i18n.yaml b/packages/core/agent-loop/README.i18n.yaml
+index 5f61e791ac..6f93f8a722 100644
+--- a/packages/core/agent-loop/README.i18n.yaml
++++ b/packages/core/agent-loop/README.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write packages/core/agent-loop/README.md
+-README.md: 60d1e75a5038500a42244a45fb077e1eb71da092
+-README.zh.md: 166ba6ff366f9a8c8c687b4521bb04b591814851
++README.md: 9c30316a2918fce6f41608a4a3635cc82300b303
++README.zh.md: dcea3eff6dafec2bca74ce3048714ea3ffc7c498
+diff --git a/packages/core/agent-loop/README.md b/packages/core/agent-loop/README.md
+index 60d1e75a50..9c30316a29 100644
+--- a/packages/core/agent-loop/README.md
++++ b/packages/core/agent-loop/README.md
+@@ -29,6 +29,8 @@ Mount `dsh-agent-loop` in any composition that should run agents. It supplies th
+ 
+ ### Configure declarative agents
+ 
++The driver commits optional adapter input-preparation notices as plugin-source `user/message` records before streaming. It deduplicates notices still present in the current request surface, so compaction can make a necessary notice eligible again. These records describe prepared inputs, not completed inference; the existing session format and ordinary notice rendering apply.
++
+ Agents declared in the config start automatically when the plugin loads. Each entry needs an `id` label; a model call additionally requires both `provider` and `model` (`agent/request` may supply a missing pair before dispatch).
+ 
+ ```yaml
+diff --git a/packages/core/agent-loop/README.zh.md b/packages/core/agent-loop/README.zh.md
+index 166ba6ff36..dcea3eff6d 100644
+--- a/packages/core/agent-loop/README.zh.md
++++ b/packages/core/agent-loop/README.zh.md
+@@ -29,6 +29,8 @@ kind: "package-reference"
+ 
+ ### 配置声明式 agent
+ 
++驱动器在流式发送前，将可选的适配器输入准备提示作为插件来源的 `user/message` 提交。当前请求视图中已有的提示不会重复添加，因此压缩移除提示后可再次补充必要信息。这些记录描述准备好的输入，不表示推理完成；沿用现有会话格式和普通提示展示。
++
+ 配置中声明的 agent 会在插件加载时自动启动。每个条目需要一个 `id` 标签；模型调用还同时需要 `provider` 与 `model`（`agent/request` 可以在分发前补齐缺失的这一对值）。
+ 
+ ```yaml
+diff --git a/packages/core/agent-loop/src/agent.ts b/packages/core/agent-loop/src/agent.ts
+index 1b8448e693..5be7f28e10 100644
+--- a/packages/core/agent-loop/src/agent.ts
++++ b/packages/core/agent-loop/src/agent.ts
+@@ -19,8 +19,10 @@ import { Inbox, agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
+ import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@deepseek-ai/dsh-llm'
+ import {
+   BlockAssembler,
++  boundContextSummary,
+   LlmError,
+   createAssistantMessage,
++  createUserMessage,
+   errorChain,
+   markAgentLoopRequest,
+ } from '@deepseek-ai/dsh-llm'
+@@ -57,6 +59,13 @@ type PreparedStep =
+     assembly: PromptAssembly
+   }
+ 
++/** Compare optional ordered route modalities without widening request-context churn. */
++function modalitiesEqual(left: RequestContext['inputModalities'], right: RequestContext['inputModalities']): boolean {
++  if (left === right) return true
++  if (left === undefined || right === undefined || left.length !== right.length) return false
++  return left.every((modality, index) => modality === right[index])
++}
++
+ /** Remove adapter-derived values before plugins propose the next request config. */
+ function requestProposal(header: EpochHeader): LlmCallConfig {
+   if (header.adapterDefaults === undefined) return header.config
+@@ -486,7 +495,10 @@ export class ReactLoopAgent implements Agent {
+     let config: LlmCallConfig
+     let preparedCall: PreparedLlmCall | undefined
+     try {
+-      preparedCall = await this.loopCtx.llm.prepareCall(proposedConfig, signal)
++      preparedCall = await this.loopCtx.llm.prepareCall(proposedConfig, signal, {
++        sessionId: this.session.id,
++        turn,
++      })
+       config = preparedCall.config
+     } catch (error: unknown) {
+       // Middleware may serve an unregistered route; terminal dispatch still requires an adapter.
+@@ -522,24 +534,59 @@ export class ReactLoopAgent implements Agent {
+     const requestContext: RequestContext = {
+       provider: config.provider,
+       model: config.model,
++      ...config.reasoningEffort === undefined ? {} : { reasoningEffort: config.reasoningEffort },
++      ...preparedCall?.inputModalities === undefined
++        ? {}
++        : { inputModalities: [...preparedCall.inputModalities] },
++      ...preparedCall?.backend === undefined ? {} : { backend: preparedCall.backend },
++      ...preparedCall?.capabilityProvenance === undefined
++        ? {}
++        : { capabilityProvenance: preparedCall.capabilityProvenance },
++      ...preparedCall?.catalogRevision === undefined
++        ? {}
++        : { catalogRevision: preparedCall.catalogRevision },
+       ...contextWindow === undefined ? {} : { contextWindow },
+     }
+     const previousContext = session.requestContext()
+     if (previousContext?.provider !== requestContext.provider
+       || previousContext.model !== requestContext.model
++      || previousContext.reasoningEffort !== requestContext.reasoningEffort
++      || !modalitiesEqual(previousContext.inputModalities, requestContext.inputModalities)
++      || previousContext.backend !== requestContext.backend
++      || previousContext.capabilityProvenance !== requestContext.capabilityProvenance
++      || previousContext.catalogRevision !== requestContext.catalogRevision
+       || previousContext.contextWindow !== requestContext.contextWindow) {
+       session.append('request/context', requestContext)
+     }
+     signal.throwIfAborted()
+ 
+-    const request = markAgentLoopRequest(deepFreeze({
++    let request = markAgentLoopRequest(deepFreeze({
+       ...header.config,
+       messages: boundaryMessages,
+       ...header.system !== undefined ? { system: header.system } : {},
+       ...header.tools !== undefined ? { tools: header.tools } : {},
+       sessionId: this.session.id,
++      turn,
+       signal,
+     }))
++    if (preparedCall?.prepareInput !== undefined) {
++      const notices = await preparedCall.prepareInput(request)
++      signal.throwIfAborted()
++      const visible = new Set(boundaryMessages.flatMap(message => message.source.kind === 'plugin'
++        ? [message.source.plugin] : []))
++      for (const notice of notices) {
++        const plugin = `llm-input-preparation:${config.provider}:${notice.key}`
++        if (visible.has(plugin)) continue
++        this.session.append('user/message', createUserMessage({
++          content: [{ type: 'text', text: notice.text }],
++          source: { kind: 'plugin', plugin, form: 'notice', summary: boundContextSummary(notice.summary) },
++        }), { surfaceOp: 'append' })
++        visible.add(plugin)
++      }
++      if (notices.length > 0) {
++        request = markAgentLoopRequest(deepFreeze({ ...request, messages: this.session.deriveMessages() }))
++      }
++    }
+     return { request, ...preparedCall === undefined ? {} : { preparedCall } }
+   }
+ }
+diff --git a/packages/core/agent-loop/tests/request-reconstruction.spec.ts b/packages/core/agent-loop/tests/request-reconstruction.spec.ts
+index d6332965ec..215d234db2 100644
+--- a/packages/core/agent-loop/tests/request-reconstruction.spec.ts
++++ b/packages/core/agent-loop/tests/request-reconstruction.spec.ts
+@@ -8,7 +8,14 @@
+ import { describe, expect, it } from 'vitest'
+ import { Context } from '@deepseek-ai/cordis'
+ import LlmRuntime, { createUserMessage, LlmError, ReasoningEffortId  } from '@deepseek-ai/dsh-llm'
+-import type { GenerateOptions, LlmModelReasoningInfo, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
++import type {
++  GenerateOptions,
++  LlmDispatchContext,
++  LlmModelReasoningInfo,
++  LlmResolvedModelInfo,
++  PreparedAdapterCall,
++  StreamChunk,
++} from '@deepseek-ai/dsh-llm'
+ import SessionStore, { Session, SessionId, foldRequestHeader } from '@deepseek-ai/dsh-session'
+ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+ import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+@@ -73,6 +80,75 @@ function registerEcho(ctx: Context) {
+ }
+ 
+ describe('request stability across the loop', () => {
++  it('logs prepared-input notices before dispatch, deduplicates visible versions and preserves replay', async () => {
++    const adapter = new MockAdapter([textResponse('first'), textResponse('second'), textResponse('after compact')])
++    const originalPrepare = adapter.prepareCall.bind(adapter)
++    adapter.prepareCall = async (...args) => {
++      const prepared = await originalPrepare(...args)
++      return { ...prepared, prepareInput: async () => [{
++        key: 'image:fixture:variant', summary: 'Image resized for sending; receipt unconfirmed',
++        text: 'Image fixture prepared: 4000x1000 -> 2000x500. Fine detail may be lost.',
++      }] }
++    }
++    const ctx = await harness(adapter)
++    try {
++      const agent = ctx.agentLoop.create(SessionId('input-notice'), { provider: 'mock', model: 'mock' })
++      send(agent, 'first')
++      await waitForIdle(ctx, agent)
++      send(agent, 'second')
++      await waitForIdle(ctx, agent)
++      const events = agent.session.snapshotEvents()
++      const notices = events.filter(event => event.type === 'user/message' && event.data.source.kind === 'plugin')
++      expect(notices).toHaveLength(1)
++      expect(notices[0]?.type === 'user/message' && notices[0].data.source).toMatchObject({
++        kind: 'plugin', form: 'notice', summary: 'Image resized for sending; receipt unconfirmed',
++      })
++      expect(adapter.requests).toHaveLength(2)
++      for (const request of adapter.requests) {
++        expect(request.messages.filter(message => message.source.kind === 'plugin')).toHaveLength(1)
++      }
++      expect(events.filter(event => event.type === 'user/message' && event.data.source.kind === 'user')).toHaveLength(2)
++      expectPrefixExtension(adapter.requests[0]!, adapter.requests[1]!)
++      const nodes = [...agent.session.surface.nodes]
++      agent.session.append('user/message', createUserMessage({
++        content: [{ type: 'text', text: '[summary: retained image reference]' }],
++        source: { kind: 'plugin', plugin: 'fixture-compaction' },
++      }), {
++        surfaceOp: { op: 'replace', start: nodes[0]!, end: nodes.at(-1)! },
++        sourceEventSeqs: nodes,
++      })
++      send(agent, 'after compact')
++      await waitForIdle(ctx, agent)
++      const restoredNotices = agent.session.snapshotEvents().filter(event => event.type === 'user/message'
++        && event.data.source.kind === 'plugin' && event.data.source.plugin.startsWith('llm-input-preparation:'))
++      expect(restoredNotices).toHaveLength(2)
++      expect(adapter.requests[2]!.messages.filter(message => message.source.kind === 'plugin'
++        && message.source.plugin.startsWith('llm-input-preparation:'))).toHaveLength(1)
++      const replay = Session.create(SessionId('prepared-input-replay'), structuredClone(agent.session.snapshotEvents()))
++      expect(replay.deriveMessages()).toEqual(agent.session.deriveMessages())
++    } finally { await ctx.fiber.dispose() }
++  })
++
++  it('input preparation failure ends the turn without dispatch or a false prepared notice', async () => {
++    const adapter = new MockAdapter([textResponse('must not run')])
++    const originalPrepare = adapter.prepareCall.bind(adapter)
++    adapter.prepareCall = async (...args) => ({
++      ...await originalPrepare(...args),
++      prepareInput: async () => { throw new LlmError('unreadable image', 'INVALID_REQUEST') },
++    })
++    const ctx = await harness(adapter)
++    try {
++      const agent = ctx.agentLoop.create(SessionId('input-failure'), { provider: 'mock', model: 'mock' })
++      send(agent, 'inspect')
++      await waitForIdle(ctx, agent)
++      expect(adapter.requests).toHaveLength(0)
++      expect(agent.session.snapshotEvents().filter(event => event.type === 'user/message')).toHaveLength(1)
++      expect(agent.session.snapshotEvents().findLast(event => event.type === 'turn/end')?.data).toMatchObject({
++        reason: { kind: 'error', error: { code: 'INVALID_REQUEST' } },
++      })
++    } finally { await ctx.fiber.dispose() }
++  })
++
+   it('each step request within a turn append-extends the previous, frozen end to end', async () => {
+     const adapter = new MockAdapter([
+       toolCallResponse('c1', 'echo', { text: 'one' }, 'first'),
+@@ -87,6 +163,7 @@ describe('request stability across the loop', () => {
+     await waitForIdle(ctx, agent)
+ 
+     expect(adapter.requests).toHaveLength(3)
++    expect(adapter.requests.map(request => request.turn)).toEqual([1, 1, 1])
+     expectPrefixExtension(adapter.requests[0]!, adapter.requests[1]!)
+     expectPrefixExtension(adapter.requests[1]!, adapter.requests[2]!)
+     for (const request of adapter.requests) {
+@@ -110,11 +187,72 @@ describe('request stability across the loop', () => {
+     await waitForIdle(ctx, agent)
+ 
+     expect(adapter.requests).toHaveLength(2)
++    expect(adapter.requests.map(request => request.turn)).toEqual([1, 2])
+     expectPrefixExtension(adapter.requests[0]!, adapter.requests[1]!)
+     expect(agent.session.snapshotEvents().flatMap(event =>
+       event.type === 'request/header' ? [event.data.reason] : [])).toEqual(['initial'])
+   })
+ 
++  it('prepares every step against one session/turn generation and accepts a new revision next turn', async () => {
++    let liveRevision = 'catalog-r1'
++    const revisions = new Map<string, string>()
++    const preparedContexts: LlmDispatchContext[] = []
++    const capturedRevisions: string[] = []
++    const adapter = new class extends MockAdapter {
++      override prepareCall(
++        provider: string,
++        model: string,
++        _signal?: AbortSignal,
++        dispatchContext?: LlmDispatchContext,
++      ): Promise<PreparedAdapterCall> {
++        if (dispatchContext === undefined) throw new Error('expected AgentLoop dispatch context')
++        preparedContexts.push(dispatchContext)
++        const key = `${dispatchContext.sessionId}:${dispatchContext.turn}`
++        const revision = revisions.get(key) ?? liveRevision
++        revisions.set(key, revision)
++        capturedRevisions.push(revision)
++        return Promise.resolve({
++          model: {
++            provider,
++            id: model,
++            name: model,
++            inputModalities: ['text', 'image'],
++            backend: 'responses',
++            capabilityProvenance: 'fixture-live-catalog',
++            catalogRevision: revision,
++          },
++          stream: (options) => {
++            liveRevision = 'catalog-r2'
++            return this.stream(options)
++          },
++        })
++      }
++    }([
++      toolCallResponse('c1', 'echo', { text: 'one' }),
++      textResponse('turn one done'),
++      textResponse('turn two done'),
++    ])
++    const ctx = await harness(adapter)
++    registerEcho(ctx)
++    const agent = ctx.agentLoop.create(SessionId('turn-generation'), { provider: 'mock', model: 'mock' })
++
++    send(agent, 'first')
++    await waitForIdle(ctx, agent)
++    send(agent, 'second')
++    await waitForIdle(ctx, agent)
++
++    expect(preparedContexts.map(context => ({ sessionId: context.sessionId, turn: context.turn }))).toEqual([
++      { sessionId: 'turn-generation', turn: 1 },
++      { sessionId: 'turn-generation', turn: 1 },
++      { sessionId: 'turn-generation', turn: 2 },
++    ])
++    expect(capturedRevisions).toEqual(['catalog-r1', 'catalog-r1', 'catalog-r2'])
++    expect(adapter.requests.map(request => request.turn)).toEqual([1, 1, 2])
++    expect(agent.session.snapshotEvents()
++      .filter(event => event.type === 'request/context')
++      .map(event => event.data.catalogRevision)).toEqual(['catalog-r1', 'catalog-r2'])
++  })
++
+   it('starts a new request series only when the admitted step explicitly asks for one', async () => {
+     const adapter = new MockAdapter([textResponse('one'), textResponse('two')])
+     const ctx = await harness(adapter)
+@@ -780,6 +918,36 @@ describe('request/context capacity records', () => {
+     expect(agent.session.surface.nodes).not.toContain(records[0]?.seq)
+   })
+ 
++  it('records exact prepared route capabilities with the request generation', async () => {
++    const adapter = new class extends MockAdapter {
++      override resolveModel(provider: string, model: string): Promise<LlmResolvedModelInfo> {
++        return Promise.resolve({
++          provider,
++          id: model,
++          name: model,
++          inputModalities: ['text', 'image'],
++          backend: 'responses',
++          capabilityProvenance: 'fixture-live-catalog',
++          catalogRevision: 'fixture-r1',
++        })
++      }
++    }([textResponse('ok')])
++    const ctx = await harness(adapter)
++    const agent = ctx.agentLoop.create(SessionId('route-capabilities'), { provider: 'mock', model: 'vision' })
++
++    send(agent, 'inspect')
++    await waitForIdle(ctx, agent)
++
++    expect(agent.session.snapshotEvents().find(event => event.type === 'request/context')?.data).toEqual({
++      provider: 'mock',
++      model: 'vision',
++      inputModalities: ['text', 'image'],
++      backend: 'responses',
++      capabilityProvenance: 'fixture-live-catalog',
++      catalogRevision: 'fixture-r1',
++    })
++  })
++
+   it('records a second capacity when the route changes mid-session', async () => {
+     const adapter = capacityAdapter(
+       { small: 64_000, large: 256_000 },
+diff --git a/packages/core/session/src/index.ts b/packages/core/session/src/index.ts
+index c55cc5fb6a..11f6a61919 100644
+--- a/packages/core/session/src/index.ts
++++ b/packages/core/session/src/index.ts
+@@ -762,6 +762,23 @@ export class Session {
+     return this.contextFold
+   }
+ 
++  /**
++   * Return capability facts only when they describe the exact route in the
++   * latest request header. A model switch can update the header independently
++   * of a failed capability lookup; that drift yields `undefined` rather than
++   * lending the previous route's modalities or backend to the new route.
++   * @returns the immutable current-route capability snapshot, or undefined before logging or on route drift.
++   */
++  currentRouteCapabilities(): RequestContext | undefined {
++    const header = this.requestHeader()?.config
++    const context = this.requestContext()
++    if (header === undefined || context === undefined) return undefined
++    if (header.provider !== context.provider
++      || header.model !== context.model
++      || header.reasoningEffort !== context.reasoningEffort) return undefined
++    return context
++  }
++
+   /** The derived-message cache: frozen projections, extended per unseen node. */
+   private derived: Message[] = []
+   /** Surface position (nodes projected) the cache has reached. */
+diff --git a/packages/core/session/src/types.ts b/packages/core/session/src/types.ts
+index 461c31ad36..9563560f91 100644
+--- a/packages/core/session/src/types.ts
++++ b/packages/core/session/src/types.ts
+@@ -1,10 +1,12 @@
+ import { brandNumber, brandString, type Branded, type BrandedNumber } from '@deepseek-ai/dsh-brand'
+ import type {
+   AssistantMessage,
++  LlmBackend,
+   ToolCallId,
+   LlmCallConfig,
+   LlmCallConfigAdapterDefaults,
+   LlmFailure,
++  ModelModality,
+   StreamChunk,
+   TokenUsage,
+   ToolResultMessage,
+@@ -236,6 +238,16 @@ export interface RequestContext {
+   provider: string
+   /** Provider-owned model id the metadata belongs to. */
+   model: string
++  /** Exact reasoning effort materialized into this request, when one applies. */
++  reasoningEffort?: LlmCallConfig['reasoningEffort']
++  /** Input modalities captured with this request's adapter generation. */
++  inputModalities?: readonly ModelModality[]
++  /** Adapter backend family captured with this request; absence is unknown. */
++  backend?: LlmBackend
++  /** Provenance of the exact route's capability facts. */
++  capabilityProvenance?: string
++  /** Opaque revision of the catalog snapshot that supplied the capability facts. */
++  catalogRevision?: string
+   /** Maximum combined request and response context in tokens, when advertised. */
+   contextWindow?: number
+ }
+diff --git a/packages/core/session/tests/request-header.spec.ts b/packages/core/session/tests/request-header.spec.ts
+index e3b7bdb92b..6ed75b8bbc 100644
+--- a/packages/core/session/tests/request-header.spec.ts
++++ b/packages/core/session/tests/request-header.spec.ts
+@@ -2,7 +2,7 @@
+ 
+ import { describe, expect, it } from 'vitest'
+ import { Session, SessionId, SessionSeq, canonicalHeader, foldRequestHeader, headerEquals } from '@deepseek-ai/dsh-session'
+-import type { EpochHeader, SessionEvent } from '@deepseek-ai/dsh-session'
++import type { EpochHeader, RequestContext, SessionEvent } from '@deepseek-ai/dsh-session'
+ import { createUserMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+ import type { ToolSchema } from '@deepseek-ai/dsh-llm'
+ 
+@@ -175,3 +175,41 @@ describe('Session.requestContext', () => {
+     expect(() => { (held as { contextWindow?: number }).contextWindow = 1 }).toThrow()
+   })
+ })
++
++describe('Session.currentRouteCapabilities', () => {
++  /** Seed one turn with an exact route header and capability snapshot. */
++  function sessionWith(
++    header: EpochHeader['config'],
++    context: Pick<RequestContext, 'provider' | 'model' | 'reasoningEffort' | 'backend'>,
++  ): Session {
++    return Session.create(SessionId('current-route-capabilities'), [{
++      type: 'turn/start', seq: SessionSeq(0), time: 1, data: { turn: 1 },
++    }, {
++      type: 'request/header', seq: SessionSeq(1), time: 1, data: { header: { config: header }, reason: 'initial' },
++    }, {
++      type: 'request/context', seq: SessionSeq(2), time: 1, data: context,
++    }])
++  }
++
++  it('returns the frozen snapshot for an exact provider/model/effort match', () => {
++    const session = sessionWith(
++      { provider: 'mock', model: 'vision', reasoningEffort: ReasoningEffortId('high') },
++      { provider: 'mock', model: 'vision', reasoningEffort: ReasoningEffortId('high'), backend: 'responses' },
++    )
++    expect(session.currentRouteCapabilities()).toEqual({
++      provider: 'mock', model: 'vision', reasoningEffort: 'high', backend: 'responses',
++    })
++    expect(Object.isFrozen(session.currentRouteCapabilities())).toBe(true)
++  })
++
++  it.each([
++    ['provider', { provider: 'other', model: 'vision', reasoningEffort: ReasoningEffortId('high') }],
++    ['model', { provider: 'mock', model: 'text', reasoningEffort: ReasoningEffortId('high') }],
++    ['reasoning effort', { provider: 'mock', model: 'vision', reasoningEffort: ReasoningEffortId('low') }],
++  ])('fails closed on %s drift', (_label, context) => {
++    expect(sessionWith(
++      { provider: 'mock', model: 'vision', reasoningEffort: ReasoningEffortId('high') },
++      context,
++    ).currentRouteCapabilities()).toBeUndefined()
++  })
++})
+diff --git a/packages/llm/llm/README.i18n.yaml b/packages/llm/llm/README.i18n.yaml
+index e5a5b22f6a..5dc4cb6828 100644
+--- a/packages/llm/llm/README.i18n.yaml
++++ b/packages/llm/llm/README.i18n.yaml
+@@ -2,5 +2,5 @@
+ # side as of the last confirmed-consistent state. Both languages carry equal authority;
+ # after editing either side, bring the other along and re-record with:
+ #   pnpm run verify-translation-pairing --write packages/llm/llm/README.md
+-README.md: 6baa020a9503f32a71231d30e78ec7a3d8862f2b
+-README.zh.md: f985736da44a76b063f16915a53cb19979fe1962
++README.md: 213d5924117fcfbd65d82975e69df42553389da7
++README.zh.md: a68985e54ee25acd4141ef8114f0938dc6ef97b9
+diff --git a/packages/llm/llm/README.md b/packages/llm/llm/README.md
+index 6baa020a95..213d592411 100644
+--- a/packages/llm/llm/README.md
++++ b/packages/llm/llm/README.md
+@@ -29,6 +29,8 @@ Any composition that calls a model provider — an agent loop, a session-title g
+ 
+ ### When to choose it
+ 
++Prepared calls may expose `prepareInput(options)`. Call it once before streaming, commit its notices through the host, and include only logged notices in the final request. Failed, cancelled or incomplete preparation cannot authorize dispatch. The operation retains prepared attachment bytes privately; its notices carry no image bytes or storage paths.
++
+ Choose this package whenever a plugin or composition needs to call a model: it is the only supported path into provider adapters, and it keeps one vocabulary across the loop, the session log, and every consumer. Do not reach for it when you need provider-specific wire behavior (that belongs in an adapter such as `dsh-llm-deepseek` or `dsh-llm-pi-ai`) or retry execution (that belongs in `dsh-llm-retry`).
+ 
+ ### Minimal composition
+diff --git a/packages/llm/llm/README.zh.md b/packages/llm/llm/README.zh.md
+index f985736da4..a68985e54e 100644
+--- a/packages/llm/llm/README.zh.md
++++ b/packages/llm/llm/README.zh.md
+@@ -29,6 +29,8 @@ kind: "package-reference"
+ 
+ ### 何时选择
+ 
++准备调用可提供 `prepareInput(options)`。应在流式发送前调用一次，通过 host 提交提示，并仅将已经记录的提示加入最终请求。准备失败、取消或尚未完成时不能发送。准备好的附件字节保留在调用内部；提示不携带图片字节或存储路径。
++
+ 当插件或组合需要调用模型时选择本包：它是进入提供方适配器的唯一受支持路径，并在 loop、会话日志与每个消费方之间保持同一套词汇。当需要提供方特定的协议行为（那属于 `dsh-llm-deepseek` 或 `dsh-llm-pi-ai` 之类的适配器）或重试执行（那属于 `dsh-llm-retry`）时，不要选择它。
+ 
+ ### 最小组合
+diff --git a/packages/llm/llm/src/index.ts b/packages/llm/llm/src/index.ts
+index cdecc4c96e..347db69a3a 100644
+--- a/packages/llm/llm/src/index.ts
++++ b/packages/llm/llm/src/index.ts
+@@ -12,8 +12,10 @@ import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+ import type {
+   GenerateOptions,
+   LlmConfigurableProvider,
++  LlmDispatchContext,
+   LlmDiscoveredModel,
+   LlmFailure,
++  LlmBackend,
+   LlmImageRequestPricing,
+   LlmModelContext,
+   LlmModelDiscoveryRequest,
+@@ -23,6 +25,7 @@ import type {
+   ModelModality,
+   StreamChunk,
+ } from './types.ts'
++import { isLlmBackend } from './types.ts'
+ import { freezeMessage, type Message } from './message.ts'
+ import { resolveRetryPolicy } from './retry-policy.ts'
+ import type { ResolvedRetryPolicy } from './retry-policy.ts'
+@@ -154,6 +157,16 @@ export function assertUsableApiKey(raw: string, pkg: string, ref: string): strin
+   )
+ }
+ 
++/** A provider input transformation explained before the corresponding request is sent. */
++export interface InputPreparationNotice {
++  /** Stable transformation identity, used only to suppress duplicates still in the request surface. */
++  readonly key: string
++  /** One-line prepared-state description; never a claim that inference completed. */
++  readonly summary: string
++  /** Model-facing explanation containing no encoded attachment bytes or storage paths. */
++  readonly text: string
++}
++
+ /** One model call whose config and adapter registration were resolved together. */
+ export interface PreparedLlmCall {
+   /** Detached, deep-frozen config with any adapter-owned default materialized. */
+@@ -164,8 +177,21 @@ export interface PreparedLlmCall {
+   readonly context?: LlmModelContext
+   /** Exact model modalities captured with the adapter dispatch generation. */
+   readonly inputModalities?: readonly ModelModality[]
++  /** Adapter backend family captured with the dispatch generation. */
++  readonly backend?: LlmBackend
++  /** Provenance of the captured capability facts. */
++  readonly capabilityProvenance?: string
++  /** Opaque catalog revision captured with the capability facts. */
++  readonly catalogRevision?: string
+   /** Config fields materialized by the captured adapter rather than proposed by the caller. */
+   readonly adapterDefaults: LlmCallConfigAdapterDefaults
++  /**
++   * Prepare route-specific inputs without inference I/O. The caller must log
++   * returned notices before including them in the eventual request.
++   * @param options - current complete request with the captured call config.
++   * @returns prepared-state notices; attachment bytes stay inside the captured adapter call.
++   */
++  prepareInput?(options: GenerateOptions): Promise<readonly InputPreparationNotice[]>
+   /**
+    * Dispatch this call once through the registration captured during
+    * preparation. The request's call-config fields must match {@link config};
+@@ -176,10 +202,30 @@ export interface PreparedLlmCall {
+   stream(options: GenerateOptions): AsyncIterable<StreamChunk>
+ }
+ 
++/** Exact model facts resolved together with one validated call config. */
++export interface ResolvedLlmCallConfig {
++  /** Detached config with adapter-owned defaults materialized. */
++  readonly config: LlmCallConfig
++  /** Exact model modalities from the same capability lookup. */
++  readonly inputModalities?: readonly ModelModality[]
++  /** Adapter backend family from the same capability lookup. */
++  readonly backend?: LlmBackend
++  /** Provenance of the exact capability facts. */
++  readonly capabilityProvenance?: string
++  /** Opaque revision of the catalog snapshot that supplied the facts. */
++  readonly catalogRevision?: string
++}
++
+ /** One adapter-owned model-resolution generation bound to its eventual stream call. */
+ export interface PreparedAdapterCall {
+   /** Exact model metadata from the same adapter generation as {@link stream}. */
+   readonly model: LlmResolvedModelInfo
++  /**
++   * Prepare inputs under this captured route without sending inference.
++   * @param options - the host's assembled request.
++   * @returns notices for the host to commit, not hidden provider prompt additions.
++   */
++  prepareInput?(options: GenerateOptions): Promise<readonly InputPreparationNotice[]>
+   /** Dispatch through that generation without re-reading dynamic connection facts. */
+   stream(options: GenerateOptions): AsyncIterable<StreamChunk>
+ }
+@@ -257,9 +303,15 @@ export abstract class LlmAdapter {
+    * @param provider - registered provider route.
+    * @param model - exact model id.
+    * @param signal - cancellation for model resolution.
++   * @param _dispatchContext - optional stable session/turn coordinates for dynamic generation selection.
+    * @returns model metadata and a one-generation stream entry point.
+    */
+-  async prepareCall(provider: string, model: string, signal?: AbortSignal): Promise<PreparedAdapterCall> {
++  async prepareCall(
++    provider: string,
++    model: string,
++    signal?: AbortSignal,
++    _dispatchContext?: LlmDispatchContext,
++  ): Promise<PreparedAdapterCall> {
+     return {
+       model: await this.resolveModel(provider, model, signal),
+       stream: options => this.stream(options),
+@@ -741,6 +793,11 @@ export class LlmRuntime extends TypertRemoteService {
+       || typeof resolved.name !== 'string'
+       || resolved.name.length === 0
+       || (resolved.description !== undefined && typeof resolved.description !== 'string')
++      || (resolved.backend !== undefined && !isLlmBackend(resolved.backend))
++      || (resolved.capabilityProvenance !== undefined
++        && (typeof resolved.capabilityProvenance !== 'string' || resolved.capabilityProvenance.length === 0))
++      || (resolved.catalogRevision !== undefined
++        && (typeof resolved.catalogRevision !== 'string' || resolved.catalogRevision.length === 0))
+     ) {
+       throw new LlmError(
+         `adapter returned invalid exact model metadata for provider "${provider}" model "${model}"`,
+@@ -771,6 +828,11 @@ export class LlmRuntime extends TypertRemoteService {
+       name: resolved.name,
+       ...resolved.description === undefined ? {} : { description: resolved.description },
+       ...inputModalities === undefined ? {} : { inputModalities },
++      ...resolved.backend === undefined ? {} : { backend: resolved.backend },
++      ...resolved.capabilityProvenance === undefined
++        ? {}
++        : { capabilityProvenance: resolved.capabilityProvenance },
++      ...resolved.catalogRevision === undefined ? {} : { catalogRevision: resolved.catalogRevision },
+       ...context === undefined ? {} : { context: { contextWindow: context.contextWindow } },
+       ...defaultMaxTokens === undefined ? {} : { defaultMaxTokens },
+     }
+@@ -830,7 +892,31 @@ export class LlmRuntime extends TypertRemoteService {
+    * @returns a detached config only when a default must be materialized.
+    */
+   async resolveCallConfig(config: LlmCallConfig, signal?: AbortSignal): Promise<LlmCallConfig> {
+-    return (await this.resolveCallFor(this.registration(config.provider), config, signal)).config
++    return (await this.resolveCallConfigInfo(config, signal)).config
++  }
++
++  /**
++   * Validate a call config and expose exact-route capability facts resolved in
++   * the same lookup.
++   * @param config - provider/model route and optional request controls.
++   * @param signal - optional cancellation for adapter-owned capability lookup.
++   * @returns the validated config and detached capability metadata.
++   */
++  async resolveCallConfigInfo(config: LlmCallConfig, signal?: AbortSignal): Promise<ResolvedLlmCallConfig> {
++    const resolved = await this.resolveCallFor(this.registration(config.provider), config, signal)
++    return {
++      config: resolved.config,
++      ...resolved.modelInfo.inputModalities === undefined
++        ? {}
++        : { inputModalities: Object.freeze([...resolved.modelInfo.inputModalities]) },
++      ...resolved.modelInfo.backend === undefined ? {} : { backend: resolved.modelInfo.backend },
++      ...resolved.modelInfo.capabilityProvenance === undefined
++        ? {}
++        : { capabilityProvenance: resolved.modelInfo.capabilityProvenance },
++      ...resolved.modelInfo.catalogRevision === undefined
++        ? {}
++        : { catalogRevision: resolved.modelInfo.catalogRevision },
++    }
+   }
+ 
+   private async resolveCallFor(
+@@ -885,11 +971,24 @@ export class LlmRuntime extends TypertRemoteService {
+    * so HMR cannot combine one adapter's capability result with another adapter.
+    * @param config - provider/model route and optional request controls.
+    * @param signal - optional cancellation for adapter-owned capability lookup.
++   * @param dispatchContext - optional stable session/turn coordinates for adapter generation selection.
+    * @returns a prepared config and its registration-bound stream entry point.
+    */
+-  async prepareCall(config: LlmCallConfig, signal?: AbortSignal): Promise<PreparedLlmCall> {
++  async prepareCall(
++    config: LlmCallConfig,
++    signal?: AbortSignal,
++    dispatchContext?: LlmDispatchContext,
++  ): Promise<PreparedLlmCall> {
+     const registration = this.registration(config.provider)
+-    const adapterCall = await registration.adapter.prepareCall(config.provider, config.model, signal)
++    const preparedDispatchContext = dispatchContext === undefined
++      ? undefined
++      : deepFreeze(structuredClone(dispatchContext))
++    const adapterCall = await registration.adapter.prepareCall(
++      config.provider,
++      config.model,
++      signal,
++      preparedDispatchContext,
++    )
+     const modelInfo = this.normalizeModelInfo(registration, config.model, adapterCall.model)
+     const resolved = this.resolveCallWithInfo(config, modelInfo)
+     const resolvedConfig = deepFreeze(structuredClone(resolved.config))
+@@ -905,6 +1004,15 @@ export class LlmRuntime extends TypertRemoteService {
+         : {},
+     })
+     let dispatched = false
++    let inputPrepared = false
++    let inputReady = false
++    const assertPreparedTarget = (options: GenerateOptions): void => {
++      if (dispatched || !callConfigEquals(options, resolvedConfig)
++        || (preparedDispatchContext !== undefined
++          && (options.sessionId !== preparedDispatchContext.sessionId || options.turn !== preparedDispatchContext.turn))) {
++        throw new LlmError('prepared LLM input target changed or was already dispatched', 'INVALID_PREPARED_CALL')
++      }
++    }
+     return Object.freeze({
+       config: resolvedConfig,
+       retryPolicy: registration.retryPolicy,
+@@ -913,7 +1021,29 @@ export class LlmRuntime extends TypertRemoteService {
+       ...modelInfo.inputModalities === undefined
+         ? {}
+         : { inputModalities: Object.freeze([...modelInfo.inputModalities]) },
++      ...modelInfo.backend === undefined ? {} : { backend: modelInfo.backend },
++      ...modelInfo.capabilityProvenance === undefined
++        ? {}
++        : { capabilityProvenance: modelInfo.capabilityProvenance },
++      ...modelInfo.catalogRevision === undefined ? {} : { catalogRevision: modelInfo.catalogRevision },
++      ...adapterCall.prepareInput === undefined ? {} : {
++        prepareInput: async (options: GenerateOptions): Promise<readonly InputPreparationNotice[]> => {
++          assertPreparedTarget(options)
++          if (inputPrepared) throw new LlmError('prepared LLM inputs may only be prepared once', 'INVALID_PREPARED_CALL')
++          inputPrepared = true
++          options.signal?.throwIfAborted()
++          const notices = await adapterCall.prepareInput!(this.forAdapter(options, registration.adapter))
++          options.signal?.throwIfAborted()
++          assertPreparedTarget(options)
++          const result = deepFreeze(structuredClone(notices))
++          inputReady = true
++          return result
++        },
++      },
+       stream: (options: GenerateOptions): AsyncIterable<StreamChunk> => {
++        if (adapterCall.prepareInput !== undefined && !inputReady) {
++          throw new LlmError('prepared LLM inputs have not completed successfully', 'INVALID_PREPARED_CALL')
++        }
+         if (dispatched) {
+           throw new LlmError('a prepared LLM call can only be dispatched once', 'INVALID_PREPARED_CALL')
+         }
+@@ -923,6 +1053,14 @@ export class LlmRuntime extends TypertRemoteService {
+             'INVALID_PREPARED_CALL',
+           )
+         }
++        if (preparedDispatchContext !== undefined
++          && (options.sessionId !== preparedDispatchContext.sessionId
++            || options.turn !== preparedDispatchContext.turn)) {
++          throw new LlmError(
++            'prepared LLM call dispatch context changed before adapter dispatch',
++            'INVALID_PREPARED_CALL',
++          )
++        }
+         dispatched = true
+         return this.streamWithRegistration(options, {
+           registration,
+@@ -973,7 +1111,15 @@ export class LlmRuntime extends TypertRemoteService {
+       let resolvedConfig: LlmCallConfig
+       let dispatch: (options: GenerateOptions) => AsyncIterable<StreamChunk>
+       if (prepared === undefined) {
+-        const adapterCall = await adapter.prepareCall(options.provider, options.model, options.signal)
++        const dispatchContext = options.sessionId === undefined || options.turn === undefined
++          ? undefined
++          : deepFreeze({ sessionId: options.sessionId, turn: options.turn })
++        const adapterCall = await adapter.prepareCall(
++          options.provider,
++          options.model,
++          options.signal,
++          dispatchContext,
++        )
+         modelInfo = this.normalizeModelInfo(registration, options.model, adapterCall.model)
+         resolvedConfig = this.resolveCallWithInfo(options, modelInfo).config
+         dispatch = options => adapterCall.stream(options)
+diff --git a/packages/llm/llm/src/types.ts b/packages/llm/llm/src/types.ts
+index 4303538892..96ab5ee8b9 100644
+--- a/packages/llm/llm/src/types.ts
++++ b/packages/llm/llm/src/types.ts
+@@ -322,8 +322,29 @@ export interface LlmModelReasoningInfo {
+   defaultEffort?: ReasoningEffortId
+ }
+ 
++/** Adapter protocol families accepted as exact-route backend metadata. */
++export const LLM_BACKENDS = ['responses', 'chat', 'chat_completions'] as const
++
++/** One recognized adapter protocol family. */
++export type LlmBackend = typeof LLM_BACKENDS[number]
++
++/**
++ * Test whether durable, provider, or wire metadata names a recognized LLM backend.
++ * @param value - candidate backend metadata.
++ * @returns whether the value belongs to the closed backend vocabulary.
++ */
++export function isLlmBackend(value: unknown): value is LlmBackend {
++  return typeof value === 'string' && (LLM_BACKENDS as readonly string[]).includes(value)
++}
++
+ /** Exact-route model metadata resolved by its owning adapter. */
+ export interface LlmResolvedModelInfo extends LlmModelInfo {
++  /** Adapter backend family that owns this exact route; absence is an unknown backend. */
++  backend?: LlmBackend
++  /** Human-readable provenance for the exact capability facts. */
++  capabilityProvenance?: string
++  /** Opaque revision of the catalog snapshot that supplied these capability facts. */
++  catalogRevision?: string
+   /** Provider-owned context capacity when known. */
+   context?: LlmModelContext
+   /** Adapter-configured per-request output cap materialized when callers omit one. */
+@@ -389,6 +410,14 @@ export interface ToolSchema {
+   parameters: Record<string, unknown>
+ }
+ 
++/** Stable conversation coordinates available while an adapter prepares one model call. */
++export interface LlmDispatchContext {
++  /** Session identity shared with the eventual {@link GenerateOptions}. */
++  readonly sessionId: Branded<'SessionId'>
++  /** Positive AgentLoop turn ordinal; every step in that turn shares this value. */
++  readonly turn: number
++}
++
+ /** A single model request, fully assembled. */
+ export interface GenerateOptions {
+   /** Registered provider route selecting the adapter instance. */
+@@ -420,6 +449,8 @@ export interface GenerateOptions {
+    * to separate cursors; adapters may map it to model-hidden transport metadata.
+    */
+   sessionId?: Branded<'SessionId'>
++  /** Positive AgentLoop turn ordinal; all model steps in one turn share it. */
++  turn?: number
+   /**
+    * Provider-neutral classification for an auxiliary model call. Adapters may
+    * map the purpose to model-hidden transport metadata or purpose-specific
+diff --git a/packages/llm/llm/tests/service.spec.ts b/packages/llm/llm/tests/service.spec.ts
+index 47309daea1..7f4771c7da 100644
+--- a/packages/llm/llm/tests/service.spec.ts
++++ b/packages/llm/llm/tests/service.spec.ts
+@@ -17,11 +17,13 @@ import LlmRuntime, {
+   createUserMessage,
+ } from '@deepseek-ai/dsh-llm'
+ import type {
++  LlmDispatchContext,
+   LlmModelContext,
+   LlmModelInfo,
+   LlmModelReasoningInfo,
+   LlmProviderInfo,
+   LlmResolvedModelInfo,
++  PreparedAdapterCall,
+ } from '@deepseek-ai/dsh-llm'
+ 
+ class ScriptedAdapter extends LlmAdapter {
+@@ -571,6 +573,13 @@ describe('LlmRuntime', () => {
+     [{ provider: 'route', id: 'model', name: 1 }, 'non-string name'],
+     [{ provider: 'route', id: 'model', name: '' }, 'empty name'],
+     [{ provider: 'route', id: 'model', name: 'Model', description: 1 }, 'non-string description'],
++    [{ provider: 'route', id: 'model', name: 'Model', backend: 1 }, 'non-string backend'],
++    [{ provider: 'route', id: 'model', name: 'Model', backend: '' }, 'empty backend'],
++    [{ provider: 'route', id: 'model', name: 'Model', backend: 'future-responses' }, 'unknown backend'],
++    [{ provider: 'route', id: 'model', name: 'Model', capabilityProvenance: 1 }, 'non-string capability provenance'],
++    [{ provider: 'route', id: 'model', name: 'Model', capabilityProvenance: '' }, 'empty capability provenance'],
++    [{ provider: 'route', id: 'model', name: 'Model', catalogRevision: 1 }, 'non-string catalog revision'],
++    [{ provider: 'route', id: 'model', name: 'Model', catalogRevision: '' }, 'empty catalog revision'],
+   ] as const)('rejects invalid exact model metadata (%s: %s)', async (metadata, _label) => {
+     const ctx = new Context()
+     await ctx.plugin(LlmRuntime)
+@@ -929,11 +938,26 @@ describe('LlmRuntime', () => {
+     await ctx.plugin(LlmRuntime)
+     let generation = 'first'
+     let dispatched: string | undefined
++    let observedDispatchContext: LlmDispatchContext | undefined
+     const adapter = new class extends ScriptedAdapter {
+-      override prepareCall(provider: string, model: string) {
++      override prepareCall(
++        provider: string,
++        model: string,
++        _signal?: AbortSignal,
++        dispatchContext?: LlmDispatchContext,
++      ): Promise<PreparedAdapterCall> {
+         const captured = generation
++        observedDispatchContext = dispatchContext
+         return Promise.resolve({
+-          model: { provider, id: model, name: model, inputModalities: ['text'] as const },
++          model: {
++            provider,
++            id: model,
++            name: model,
++            inputModalities: ['text'] as const,
++            backend: 'responses',
++            capabilityProvenance: 'live-catalog-explicit-v1',
++            catalogRevision: 'catalog-r1',
++          },
+           stream: (options: GenerateOptions) => {
+             dispatched = captured
+             return super.stream(options)
+@@ -943,11 +967,38 @@ describe('LlmRuntime', () => {
+     }(SCRIPT)
+     ctx.llm.registerAdapter(['route'], adapter)
+ 
+-    const prepared = await ctx.llm.prepareCall({ provider: 'route', model: 'model' })
++    const dispatchContext = {
++      sessionId: 'dispatch-session' as NonNullable<GenerateOptions['sessionId']>,
++      turn: 3,
++    }
++    const prepared = await ctx.llm.prepareCall(
++      { provider: 'route', model: 'model' },
++      undefined,
++      dispatchContext,
++    )
+     generation = 'second'
++    dispatchContext.turn = 4
++    expect(observedDispatchContext).toEqual({ sessionId: 'dispatch-session', turn: 3 })
++    expect(Object.isFrozen(observedDispatchContext)).toBe(true)
+     expect(prepared.inputModalities).toEqual(['text'])
+     expect(Object.isFrozen(prepared.inputModalities)).toBe(true)
+-    await collect(prepared.stream({ ...prepared.config, messages: [] }))
++    expect(prepared).toMatchObject({
++      backend: 'responses',
++      capabilityProvenance: 'live-catalog-explicit-v1',
++      catalogRevision: 'catalog-r1',
++    })
++    expect(() => prepared.stream({
++      ...prepared.config,
++      messages: [],
++      sessionId: 'dispatch-session' as NonNullable<GenerateOptions['sessionId']>,
++      turn: 4,
++    })).toThrow(expect.objectContaining({ code: 'INVALID_PREPARED_CALL' }))
++    await collect(prepared.stream({
++      ...prepared.config,
++      messages: [],
++      sessionId: 'dispatch-session' as NonNullable<GenerateOptions['sessionId']>,
++      turn: 3,
++    }))
+     expect(dispatched).toBe('first')
+   })
+ 
+diff --git a/packages/preset/agent-presets/presets/standard/agent.cordis.yml b/packages/preset/agent-presets/presets/standard/agent.cordis.yml
+index 63b1798840..1f2eb25ca6 100644
+--- a/packages/preset/agent-presets/presets/standard/agent.cordis.yml
++++ b/packages/preset/agent-presets/presets/standard/agent.cordis.yml
+@@ -61,6 +61,10 @@
+   config:
+     sampleOverCapGlobResults: false
+ 
++# Local DSH distribution extension; not part of the upstream standard preset.
++- id: tool-attachment-history
++  name: dsh-tool-attachment-history
++
+ # ── background jobs ────────────────────────────────────────────────────────
+ 
+ # Only the model-facing controls. The task REGISTRY stays on the host plane:
+diff --git a/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.i18n.yaml b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.i18n.yaml
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.i18n.yaml
+@@ -0,0 +1,6 @@
++# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
++# side as of the last confirmed-consistent state. Both languages carry equal authority;
++# after editing either side, bring the other along and re-record with:
++#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-06-logged-input-preparation.md
++2026-09-06-logged-input-preparation.md: 4462708854f09fcb6065b883ca992ad29bb40738
++2026-09-06-logged-input-preparation.zh.md: 90913c50a041198fbc7cb906b64b3c8f22617b1f
+diff --git a/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.md b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.md
+@@ -0,0 +1,33 @@
++# Agent Note: Logged input preparation in the local Grok distribution
++
++Status: implemented
++
++English | [中文](2026-09-06-logged-input-preparation.zh.md)
++
++## Problem
++
++The local SuperGrok adapter projects durable images into smaller request versions, but users and the model cannot reconstruct those transformations from the session log. A per-image cap also fails to bound the complete serialized request.
++
++## Decision
++
++The captured LLM call exposes optional `prepareInput`. Preparation reuses AttachmentStore request versions and returns keyed notices, not image bytes. The host appends notices as existing plugin-sourced user/message events before rebuilding the final input. A visible notice is not duplicated; compaction can remove it and a later preparation can restore it. Adapters without the optional method remain unchanged.
++
++The local provider measures the final serialized UTF-8 body against a configurable 40,000,000-byte conservative budget. It rejects overflow before inference authentication and POST, without omission, splitting, provider fallback, or a claim of successful image receipt. The local standard preset gains the existing generic recall tool; the work-state plugin stays Grok-only.
++
++This is an additive local extension to [the unified image pipeline](2026-08-20-unified-image-request-pipeline.md). That note remains active: its durable storage, codec, cache and other-provider policies are not superseded. No archived record is changed. The local distribution is installed as `0.1.2-rc.1.grok.2`; complete isolated profiles and native production inventory pass. Online model acceptance remains separately authorized.
++
++## Alternatives considered
++
++**Inject text inside the adapter.** This would make model-visible input differ from the replayable log, so the host owns the notices.
++
++**Build another image cache.** AttachmentStore already owns validated request variants and cancellation; a second cache would duplicate that authority.
++
++**Drop or split excess images.** That changes the requested context or request count without authorization. This provider rejects the complete oversized request instead.
++
++## Testing
++
++Fixed tests cover serialized byte boundaries, repeated image occurrences, cancellation, failure before POST, logged notice reconstruction, compaction restoration, both installed profile compositions, old-log rollback reads and unchanged Bridge request counting. Local HTTP requests also check compression-header negotiation. Online acceptance requires a separate current authorization.
++
++## Consequences
++
++Preparing an image does not prove provider receipt. Notices add tokens and must count toward the final body budget. A new host/provider package pair must be installed together; unit tests alone do not prove full profile compatibility.
+diff --git a/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.zh.md b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.zh.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/feature/2026-09-06-logged-input-preparation.zh.md
+@@ -0,0 +1,33 @@
++# Agent Note: 本地 Grok 发行版的可回放输入准备
++
++Status: implemented
++
++[English](2026-09-06-logged-input-preparation.md) | 中文
++
++## Problem
++
++本地 SuperGrok adapter 会将持久图片投影为较小的请求版本，但用户和模型无法从会话日志重建这些变换。单图上限也不能约束完整序列化请求。
++
++## Decision
++
++已绑定的 LLM 调用提供可选 `prepareInput`。准备复用 AttachmentStore 请求版本，只返回带键的提示，不返回图片字节。host 在重建最终输入前，将提示写入现有的插件来源 user/message 事件。仍可见的提示不会重复；压缩移除提示后，后续准备可以恢复它。未实现可选方法的 adapter 保持原行为。
++
++本地 provider 将最终序列化 UTF-8 正文与可配置的 40,000,000 字节保守预算比较。超限在推理认证和 POST 前拒绝，不丢图、拆分、回退 provider，也不宣称模型已收到图片。本地 standard 预设挂载现有通用召回工具；工作状态插件仍仅供 Grok 模式使用。
++
++这是对[统一图片管线](2026-08-20-unified-image-request-pipeline.zh.md)的本地增量扩展。原记录仍然有效：持久存储、编码器、缓存及其他 provider 策略没有被替代。不修改归档记录。本地发行已安装为 `0.1.2-rc.1.grok.2`；完整隔离 profile 和生产原生清单检查通过。线上模型验收仍须单独授权。
++
++## Alternatives considered
++
++**由 adapter 注入文本。** 这会使模型输入与可回放日志不一致，因此提示由 host 管理。
++
++**另建图片缓存。** AttachmentStore 已管理经过验证的请求版本及取消；第二套缓存会重复这一职责。
++
++**丢弃或拆分超限图片。** 这会未经授权改变上下文或请求次数。本 provider 因此拒绝完整的超限请求。
++
++## Testing
++
++固定测试覆盖序列化字节边界、重复图片、取消、POST 前失败、日志提示重建、压缩后恢复、双 profile 安装组合、旧日志回滚读取及 Bridge 请求计数不变。本机 HTTP 请求也检查了压缩请求头协商。线上验收需要另行取得当前授权。
++
++## Consequences
++
++准备图片不代表 provider 已接收。提示增加 token，必须计入最终正文预算。新 host/provider 包须配套安装；单元测试不能单独证明完整 profile 兼容性。
+diff --git a/packages/llm/llm/tests/input-preparation.spec.ts b/packages/llm/llm/tests/input-preparation.spec.ts
+new file mode 100644
+--- /dev/null
++++ b/packages/llm/llm/tests/input-preparation.spec.ts
+@@ -0,0 +1,44 @@
++import { expect, it } from 'vitest'
++import { Context } from '@deepseek-ai/cordis'
++import LlmRuntime, { LlmAdapter, createUserMessage, LlmError } from '@deepseek-ai/dsh-llm'
++import type { GenerateOptions, PreparedAdapterCall, StreamChunk } from '@deepseek-ai/dsh-llm'
++
++class InputAdapter extends LlmAdapter {
++  fail = false
++  override async prepareCall(): Promise<PreparedAdapterCall> {
++    return {
++      model: { provider: 'fixture', id: 'dynamic', name: 'dynamic' },
++      prepareInput: async () => {
++        if (this.fail) throw new LlmError('preparation failed', 'INVALID_REQUEST')
++        return [{ key: 'fixture', summary: 'prepared', text: 'input prepared, not sent' }]
++      },
++      stream: options => this.stream(options),
++    }
++  }
++  async *stream(_options: GenerateOptions): AsyncIterable<StreamChunk> {
++    yield { type: 'finish', reason: { kind: 'stop' } }
++  }
++}
++
++it('requires successful one-shot preparation and rejects route drift', async () => {
++  const ctx = new Context()
++  await ctx.plugin(LlmRuntime)
++  const adapter = new InputAdapter()
++  ctx.llm.registerAdapter(['fixture'], adapter)
++  try {
++    const config = { provider: 'fixture', model: 'dynamic' }
++    const options = { ...config, messages: [createUserMessage({ content: [{ type: 'text', text: 'test' }], source: { kind: 'user' } })] }
++    const call = await ctx.llm.prepareCall(config)
++    expect(() => call.stream(options)).toThrow(/inputs have not completed/)
++    await expect(call.prepareInput!({ ...options, model: 'other' })).rejects.toMatchObject({ code: 'INVALID_PREPARED_CALL' })
++    const notices = await call.prepareInput!(options)
++    expect(Object.isFrozen(notices[0])).toBe(true)
++    await expect(call.prepareInput!(options)).rejects.toMatchObject({ code: 'INVALID_PREPARED_CALL' })
++    for await (const _chunk of call.stream(options)) { /* Consume the terminal fixture. */ }
++    expect(() => call.stream(options)).toThrow(/only be dispatched once/)
++    adapter.fail = true
++    const failed = await ctx.llm.prepareCall(config)
++    await expect(failed.prepareInput!(options)).rejects.toMatchObject({ code: 'INVALID_REQUEST' })
++    expect(() => failed.stream(options)).toThrow(/inputs have not completed/)
++  } finally { await ctx.fiber.dispose() }
++})

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/deepseek-ai/deepseek-harness.git",
+  "tag": "dsh-v0.1.2-rc.1",
+  "commit": "a66e4702047846cdaa10c66c9d3df3951f5ea70d",
+  "distributionVersion": "0.1.2-rc.1.grok.2",
+  "packageManager": "pnpm@11.7.0",
+  "nodeMajor": 24,
+  "patches": [
+    "0001-grok-input-and-history.patch"
+  ],
+  "packages": {
+    "packages/core/session": "0.1.2-rc.1.grok.1",
+    "packages/api/session-controller": "0.1.2-rc.1.grok.1",
+    "packages/llm/llm": "0.1.2-rc.1.grok.2",
+    "packages/core/agent-loop": "0.1.2-rc.1.grok.2",
+    "packages/preset/agent-presets": "0.1.2-rc.1.grok.2"
+  }
+}
