@@ -1,9 +1,10 @@
 {
   "name": "dsh-attachment-history",
-  "version": "1.1.0",
-  "description": "Authoritative same-session durable image occurrence collection for DeepSeek Harness",
+  "version": "1.2.0",
+  "description": "Same-session durable image occurrence collection for DeepSeek Harness 0.1.5",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
   "exports": {
@@ -11,42 +12,19 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
-    "lib/**/*.js",
-    "lib/types/**/*.d.ts",
-    "src/**/*.ts",
-    "tests/**/*.ts",
-    "tsconfig.json",
+    "lib",
+    "src",
+    "LICENSE",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "build": "tsc -p tsconfig.json"
   },
-  "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-invariants": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
-    "@deepseek-ai/dsh-session": "0.1.2-rc.1.grok.1"
-  },
-  "devDependencies": {
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-invariants": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
-    "@deepseek-ai/dsh-session": "0.1.2-rc.1.grok.1",
-    "typescript": "5.9.3",
-    "vitest": "4.1.11"
-  },
-  "engines": {
-    "node": ">=24 <25"
+    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.5-rc.2"
   }
 }

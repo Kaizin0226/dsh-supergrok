@@ -41,6 +41,62 @@ function seedCatalog(adapter, models = [entitled()]) {
   };
 }
 
+test('the session request guard rejects before a model POST and receives no private request content', async () => {
+  let posts = 0;
+  const adapter = new GrokAdapter(settings(), { getAccessToken: async () => 'fixture' }, undefined, {
+    beforeModelRequest(request) {
+      assert.deepEqual(Object.keys(request).sort(), ['model', 'provider', 'purpose', 'reasoningEffort', 'sessionId', 'signal']);
+      assert.equal(request.sessionId, 'guarded-session');
+      assert.equal(request.purpose, 'compaction');
+      throw new Error('SYNTHETIC_POLICY_REFUSAL');
+    },
+    fetch: async (_url, _init, purpose) => {
+      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
+      posts++; return successResponse();
+    },
+  });
+  await assert.rejects(drain(adapter.stream(generateOptions(undefined, { sessionId: 'guarded-session', purpose: 'compaction' }))), /SYNTHETIC_POLICY_REFUSAL/);
+  assert.equal(posts, 0);
+});
+
+test('guarded authentication rejection performs one model POST without refresh or replay', async () => {
+  let posts = 0;
+  let refreshes = 0;
+  let guardCalls = 0;
+  const adapter = new GrokAdapter(settings(), { getAccessToken: async rejected => { if (rejected) refreshes++; return 'fixture'; } }, undefined, {
+    beforeModelRequest() { guardCalls++; return { disableAutomaticRetries: true }; },
+    fetch: async (_url, _init, purpose) => {
+      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
+      posts++; return new Response(JSON.stringify({ error: { message: 'synthetic rejection' } }), { status: 401 });
+    },
+  });
+  await assert.rejects(drain(adapter.stream(generateOptions(undefined, { sessionId: 'guarded-session' }))));
+  assert.equal(guardCalls, 1);
+  assert.equal(posts, 1);
+  assert.equal(refreshes, 0);
+});
+
+test('cancellation while awaiting the request policy prevents model dispatch', async () => {
+  const controller = new AbortController();
+  let calls = 0;
+  let posts = 0;
+  const adapter = new GrokAdapter(settings(), { getAccessToken: async () => 'fixture' }, undefined, {
+    async beforeModelRequest(request) {
+      calls++;
+      assert.equal(Object.isFrozen(request), true);
+      await Promise.resolve();
+      controller.abort(new Error('synthetic cancellation'));
+    },
+    fetch: async (_url, _init, purpose) => {
+      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
+      posts++; return successResponse();
+    },
+  });
+  await assert.rejects(drain(adapter.stream(generateOptions(controller.signal))), /synthetic cancellation/);
+  assert.equal(calls, 1);
+  assert.equal(posts, 0);
+});
+
 test('final UTF-8 request budget includes complete serialized messages and rejects before token or POST', async () => {
   const payloads = [];
   let tokens = 0;

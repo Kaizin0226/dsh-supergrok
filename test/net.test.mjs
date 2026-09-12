@@ -117,7 +117,7 @@ test('OAuth form transport sends truthful fixed client identity headers', async 
   await postFormJson('/oauth2/device/code', { client_id: 'public', referrer: 'dsh-supergrok-oauth-hardened' }, 1000, transport);
   assert.equal(seen.purpose, 'oauth');
   assert.equal(seen.init.headers['x-grok-client-surface'], 'ui');
-  assert.equal(seen.init.headers['x-grok-client-version'], '0.7.0-hardened.1');
+  assert.equal(seen.init.headers['x-grok-client-version'], '0.8.0-hardened.1');
   assert.equal(seen.init.headers['x-grok-client-identifier'], 'dsh-supergrok-oauth-hardened');
   assert.equal(
     seen.init.headers['user-agent'],

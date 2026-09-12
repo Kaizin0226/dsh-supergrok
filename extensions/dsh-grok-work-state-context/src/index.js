@@ -8,7 +8,7 @@
  * @module dsh-grok-work-state-context
  */
 
-import { CONTEXT_NAME, CONTEXT_ORDER } from './invariant.js';
+import { CONTEXT_NAME, CONTEXT_ORDER } from './constants.js';
 import { renderWorkStateContext } from './projector.js';
 
 /** Cordis plugin identity. */
@@ -33,7 +33,7 @@ function assertMethod(owner, key, label) {
  */
 export function apply(ctx) {
   assertMethod(ctx.systemPrompt, 'context', 'systemPrompt.context');
-  assertMethod(ctx.sessionProjections, 'stateOf', 'sessionProjections.stateOf');
+  assertMethod(ctx.sessionProjections, 'snapshot', 'sessionProjections.snapshot');
   assertMethod(ctx.jobs, 'list', 'jobs.list');
   assertMethod(ctx.agents, 'list', 'agents.list');
   assertMethod(ctx.agents, 'isOwnedBy', 'agents.isOwnedBy');
@@ -48,6 +48,5 @@ export function apply(ctx) {
     }),
   }), 'grok-work-state-context.context()');
 }
-
 
 

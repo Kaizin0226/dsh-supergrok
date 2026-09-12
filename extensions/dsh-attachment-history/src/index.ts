@@ -117,10 +117,10 @@ function toolResultImageRefs(value: unknown): ImageAttachmentRef[] {
 /**
  * Collect authorized occurrences from parsed durable events. Callers supply
  * the durable fork-inherited prefix length; inherited parent events are never
- * authority in the child session. For stored artifacts, derive that length
- * from the last `session/end-seed` marker event (the rc.1 durable projection
- * of a Session's `inheritedEventCount`); the live Session face below passes
- * `inheritedEventCount` directly.
+ * authority in the child session. Supply the native decoder's v3
+ * `inheritedEventCount` after migration; do not reinterpret legacy markers
+ * or subtract an estimated number of removed stream records. Occurrence
+ * coordinates always address this decoded event stream.
  * @param events - parsed event records, optionally mixed with non-event records.
  * @param inheritedSeedLength - durable child-session fork-inherited prefix length.
  * @returns occurrences in ascending input and within-event order.
@@ -129,6 +129,9 @@ export function collectAuthorizedImageOccurrencesFromEvents(
   events: readonly unknown[],
   inheritedSeedLength = 0,
 ): ImageAttachmentOccurrence[] {
+  if (!Number.isSafeInteger(inheritedSeedLength) || inheritedSeedLength < 0) {
+    throw new TypeError('inheritedEventCount must be a non-negative safe integer')
+  }
   const occurrences: ImageAttachmentOccurrence[] = []
   for (const value of events) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) continue
@@ -223,4 +226,3 @@ export function resolveAuthorizedImageOccurrence(
   }
   return selected
 }
-

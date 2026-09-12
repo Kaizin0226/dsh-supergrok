@@ -5,7 +5,7 @@ import LlmRuntime from '@deepseek-ai/dsh-llm';
 import { CredentialProvider } from '@deepseek-ai/dsh-credentials';
 import { SettingsProvider } from '@deepseek-ai/dsh-settings';
 
-// Exercise the installed rc.1 service implementations, not legacy API mocks.
+// Exercise the installed 0.1.5-rc.2 service implementations, not legacy API mocks.
 // Only storage and the web route sink are replaced; neither can touch disk or bind a port.
 class MemorySettings extends SettingsProvider {
   constructor(ctx, options) { super(ctx); this.doc = structuredClone(options?.doc ?? {}); }
@@ -45,7 +45,7 @@ async function settleUntil(predicate) {
   assert.ok(predicate(), 'Cordis lifecycle did not settle');
 }
 
-test('real rc.1 apply survives optional settings attach/change/detach/re-attach and disposes owned resources', async (t) => {
+test('real 0.1.5-rc.2 apply survives optional settings attach/change/detach/re-attach and disposes owned resources', async (t) => {
   assert.equal(process.env.XAI_API_KEY === '', true, 'Use the credential-scrubbing test runner');
   const previousAcceptance = process.env.DSH_SUPERGROK_ACCEPTANCE;
   process.env.DSH_SUPERGROK_ACCEPTANCE = '1';

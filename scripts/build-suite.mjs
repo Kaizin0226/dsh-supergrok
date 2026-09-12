@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const { values } = parseArgs({ options: { 'work-dir': { type: 'string' }, phase: { type: 'string', default: 'all' } } });
+const { values } = parseArgs({ options: { 'work-dir': { type: 'string' }, phase: { type: 'string', default: 'all' }, 'update-locks': { type: 'boolean', default: false } } });
 if (Number(process.versions.node.split('.')[0]) !== 24) throw Error('Node.js 24 is required');
 if (!values['work-dir']) throw Error('--work-dir is required');
 const work = resolve(values['work-dir']);
@@ -26,6 +26,16 @@ const run = (args, cwd = kit) => {
 };
 // Preserve every registry resolution from the reviewed lock; refresh only locally built tarball bytes.
 function lockedGraph(template, destination, packed) {
+  if (values['update-locks']) {
+    const path = join(destination, 'package-lock.json');
+    if (existsSync(path)) {
+      const previous = read(path);
+      for (const p of packed) delete previous.packages[`node_modules/${p.name}`];
+      save(path, previous);
+    }
+    run([npm, 'install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund'], destination);
+    cpSync(join(destination, 'package-lock.json'), join(root, 'build-locks', template));
+  }
   const lock = read(join(root, 'build-locks', template));
   const manifest = read(join(destination, 'package.json'));
   const ordered = object => JSON.stringify(Object.entries(object ?? {}).sort());
@@ -40,8 +50,10 @@ function lockedGraph(template, destination, packed) {
 }
 const core = read(join(artifacts, 'core-packages.json'));
 const names = ['dsh-attachment-history', 'dsh-tool-attachment-history', 'dsh-grok-work-state-context'];
-const dependencies = { '@deepseek-ai/dsh': '0.1.2-rc.1' };
-const overrides = {};
+const components = read(join(root, 'components.lock.json'));
+const dependencies = { '@deepseek-ai/dsh': components.dsh.version };
+const family = read(join(artifacts, 'release-family.json'));
+const overrides = { ...family };
 for (const p of core) {
   const spec = `file:${relative(kit, join(artifacts, p.file)).replaceAll('\\', '/')}`;
   dependencies[p.name] = spec;
@@ -64,18 +76,22 @@ if (values.phase === 'all' || values.phase === 'prepare') {
   Object.assign(dependencies, {
     '@deepseek-ai/cordis-plugin-loader': '1.0.3',
     '@deepseek-ai/cordis-plugin-include': '1.0.7',
+    '@deepseek-ai/dsh-scope': components.dsh.version,
+    '@deepseek-ai/dsh-tool-todo': components.dsh.version,
   });
-  save(join(kit, 'package.json'), { name: 'dsh-supergrok-build-kit', version: '0.7.0', private: true, type: 'module', dependencies, overrides,
+  save(join(kit, 'package.json'), { name: 'dsh-supergrok-build-kit', version: components.suite.version, private: true, type: 'module', dependencies, overrides,
     devDependencies: { typescript: '5.9.3', vitest: '4.1.11', '@types/node': '24.13.3' } });
   cpSync(join(root, 'presets'), join(kit, 'presets'), { recursive: true });
+  cpSync(join(root, 'test/extensions'), join(kit, 'tests'), { recursive: true });
   lockedGraph('suite-kit.lock.json', kit, core);
   run([npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund']);
 }
 if (values.phase === 'all' || values.phase === 'compile') {
   for (const name of names.slice(0, 2)) run([join(kit, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json'], join(kit, 'extensions', name));
+  cpSync(join(kit, 'extensions/dsh-grok-work-state-context/src'), join(kit, 'extensions/dsh-grok-work-state-context/lib'), { recursive: true });
 }
 if (values.phase === 'all' || values.phase === 'test') {
-  run([join(kit, 'node_modules/vitest/vitest.mjs'), 'run', 'extensions/dsh-attachment-history/tests', 'extensions/dsh-tool-attachment-history/tests']);
+  run(['--import', './tests/offline.mjs', '--test', 'tests/history.test.mjs', 'tests/recall.test.mjs', 'tests/work-state.test.mjs', 'tests/native-composition.test.mjs']);
 }
 if (values.phase === 'all' || values.phase === 'pack') {
   const packed = [...core];
@@ -90,8 +106,8 @@ if (values.phase === 'all' || values.phase === 'pack') {
   packed.push({ name: provider.name, version: provider.version, file: `${provider.name}-${provider.version}.tgz` });
   const bundle = join(work, 'bundle');
   mkdirSync(join(bundle, 'vendor'), { recursive: true });
-  const runtimeDependencies = { '@deepseek-ai/dsh': '0.1.2-rc.1' };
-  const runtimeOverrides = {};
+  const runtimeDependencies = { '@deepseek-ai/dsh': components.dsh.version };
+  const runtimeOverrides = { ...family };
   for (const p of packed) {
     cpSync(join(artifacts, p.file), join(bundle, 'vendor', p.file));
     runtimeDependencies[p.name] = `file:vendor/${p.file}`;
@@ -99,17 +115,17 @@ if (values.phase === 'all' || values.phase === 'pack') {
     p.sha256 = createHash('sha256').update(readFileSync(join(artifacts, p.file))).digest('hex');
   }
   // Keep the complete dependency graph in the distribution, with no private paths.
-  save(join(bundle, 'package.json'), { name: 'dsh-supergrok-runtime', version: '0.7.0', private: true, type: 'module',
+  save(join(bundle, 'package.json'), { name: 'dsh-supergrok-runtime', version: components.suite.version, private: true, type: 'module',
     dependencies: runtimeDependencies, overrides: runtimeOverrides });
   mkdirSync(join(bundle, 'preset'), { recursive: true });
-  const presetFiles = ['agent.cordis.yml', 'preset.yml', 'package.json', 'base-lock.json', 'PROVENANCE.md', 'LICENSE', 'NOTICE', 'Grok-Build-Apache-2.0.txt'];
+  const presetFiles = ['agent.cordis.yml', 'preset.yml', 'package.json', 'base-lock.json', 'reference-lock.json', 'SOURCE-PROVENANCE.md', 'RELEASE-NOTES.md', 'PROVENANCE.md', 'LICENSE', 'NOTICE', 'Grok-Build-Apache-2.0.txt'];
   for (const file of presetFiles) cpSync(join(root, 'presets/grok-optimized', file), join(bundle, 'preset', file));
   lockedGraph('runtime.lock.json', bundle, packed);
   const files = {};
   for (const file of ['package.json', 'package-lock.json', ...packed.map(p => `vendor/${p.file}`), ...presetFiles.map(p => `preset/${p}`)]) {
     files[file] = createHash('sha256').update(readFileSync(join(bundle, file))).digest('hex');
   }
-  save(join(bundle, 'suite-manifest.json'), { schemaVersion: 1, upstreamCommit: 'a66e4702047846cdaa10c66c9d3df3951f5ea70d', packages: packed, files });
+  save(join(bundle, 'suite-manifest.json'), { schemaVersion: 1, suiteVersion: components.suite.version, upstreamCommit: components.dsh.commit, packages: packed, files });
   console.log('Packaged source-built components and a portable locked runtime bundle.');
 }
 if (!['all', 'prepare', 'compile', 'test', 'pack'].includes(values.phase)) throw Error('Unknown suite phase');

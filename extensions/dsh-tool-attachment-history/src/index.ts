@@ -10,10 +10,9 @@ import type { Context } from '@deepseek-ai/cordis'
 import { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { ImageAttachmentRef, ImageMediaType } from '@deepseek-ai/dsh-attachment'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { isLlmBackend } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import { defineTool, ToolArgsError } from '@deepseek-ai/dsh-tools'
-import type { GenericCallView, ToolDefinition } from '@deepseek-ai/dsh-tools'
+import type { GenericCallView, ToolDefinition, ToolExecution } from '@deepseek-ai/dsh-tools'
 import {
   collectAuthorizedImageOccurrences,
   collectHiddenImageAttachments,
@@ -111,19 +110,23 @@ function recalledImageContent(value: RecalledImageValue): ContentBlock[] {
 }
 
 /**
- * Require the logged exact current route to declare both a backend and image input.
- * @param agent - current owning agent whose durable request context is authoritative.
+ * Resolve the native routed model and require explicit image input. Uses the
+ * same public route APIs as the target host's read_image; no provider requests
+ * or legacy capability event are used to decide attachment access.
+ * @param ctx - current scoped native services.
+ * @param exec - exact tool execution, including its native cancellation signal.
  */
-export function assertCurrentRouteCanRecallImage(agent: Agent): void {
-  const capability = agent.session.currentRouteCapabilities()
-  if (capability === undefined) {
-    throw new Error('cannot recall an image: exact current route capabilities are unavailable or have drifted')
+export async function assertCurrentRouteCanRecallImage(ctx: Context, exec: ToolExecution): Promise<void> {
+  const routed = exec.agent?.session.requestHeader()?.config
+  const provider = routed?.provider ?? exec.agent?.options.provider
+  const model = routed?.model ?? exec.agent?.options.model
+  const llm = ctx.get('llm')
+  if (provider === undefined || model === undefined || llm === undefined) {
+    throw new Error('cannot recall an image: exact current model route is unavailable')
   }
-  if (!isLlmBackend(capability.backend)) {
-    throw new Error(`cannot recall an image: current route ${JSON.stringify(`${capability.provider}/${capability.model}`)} has an unknown backend`)
-  }
-  if (capability.inputModalities?.includes('image') !== true) {
-    throw new Error(`cannot recall an image: current model ${JSON.stringify(capability.model)} does not explicitly declare image input`)
+  const info = await llm.resolveModelInfo(provider, model, exec.signal)
+  if (info.inputModalities?.includes('image') !== true) {
+    throw new Error(`cannot recall an image: current model ${JSON.stringify(model)} does not explicitly declare image input`)
   }
 }
 
@@ -243,7 +246,7 @@ export function apply(ctx: Context): void {
           || args.occurrence.ordinal < 0)) {
         throw new Error('occurrence seq and ordinal must be non-negative integers')
       }
-      assertCurrentRouteCanRecallImage(exec.agent)
+      await assertCurrentRouteCanRecallImage(ctx, exec)
       const attachmentId = AttachmentId(args.attachmentId)
       const occurrence = resolveAuthorizedImageOccurrence(exec.agent.session, attachmentId, args.occurrence)
       const stored = await ctx.attachments.readImage(occurrence.ref, exec.signal)
@@ -274,4 +277,3 @@ export function apply(ctx: Context): void {
     },
   })))
 }
-

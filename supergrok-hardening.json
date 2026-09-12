@@ -10,7 +10,7 @@
   "schemaVersion": 3,
   "provider": "grok-oauth",
   "permission": "read-only",
-  "pluginVersion": "0.7.0-hardened.1",
+  "pluginVersion": "0.8.0-hardened.1",
   "selection": {
     "source": "authenticated-live-account-catalog",
     "fixedModel": false,
@@ -172,11 +172,11 @@
   "acceptanceSingleInferenceLatch": true,
   "protocolProvenance": "xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571",
   "hostPeerVersions": {
-    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
     "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
-    "@deepseek-ai/dsh-settings": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
+    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
     "@deepseek-ai/schemastery": "3.18.2"
   },
   "canonicalRuntimeTree": {
@@ -207,5 +207,12 @@
     "directFallback": false,
     "environmentDiscovery": false,
     "changeRequiresRestart": true
+  },
+  "requestBoundary": {
+    "protocolVersion": 1,
+    "hook": "grok-oauth/before-model-request",
+    "everyModelPost": true,
+    "refusalPreventsInference": true,
+    "supportsDisableAutomaticRetries": true
   }
 }

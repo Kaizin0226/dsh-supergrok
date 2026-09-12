@@ -5,17 +5,17 @@
  * external-agent dependency. Its only model-facing output is one bounded DSH
  * runtime-context snapshot.
  *
- * @module dsh-grok-work-state-context/invariant
+ * @module dsh-grok-work-state-context/constants
  */
 
 /** Package identity used by release and compatibility checks. */
 export const PACKAGE_NAME = 'dsh-grok-work-state-context';
 
 /** Version of this independently releasable package. */
-export const PACKAGE_VERSION = '1.1.0';
+export const PACKAGE_VERSION = '1.2.0';
 
 /** Exact DSH API generation audited for this release. */
-export const SUPPORTED_DSH_VERSION = '0.1.2-rc.1';
+export const SUPPORTED_DSH_VERSION = '0.1.5-rc.2';
 
 /** Unique system-prompt context name. */
 export const CONTEXT_NAME = 'grok-optimized:work-state';
@@ -37,5 +37,4 @@ export const SNAPSHOT_VERSION = 1;
 
 /** Capacity allocation order. Earlier categories may consume all remaining bytes. */
 export const CATEGORY_ORDER = Object.freeze(['todos', 'jobs', 'children']);
-
 

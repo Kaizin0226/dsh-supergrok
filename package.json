@@ -1,7 +1,7 @@
 {
   "name": "dsh-llm-grok-oauth",
   "description": "Pinned and hardened dynamic live-catalog SuperGrok OAuth provider for DeepSeek Harness",
-  "version": "0.7.0-hardened.1",
+  "version": "0.8.0-hardened.1",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -72,7 +72,7 @@
     "test": "npm run test:provider && npm run test:preset && npm run test:contracts && npm run test:deployment",
     "test:provider": "node test/run-tests.mjs",
     "test:smoke": "node test/run-tests.mjs smoke",
-    "test:preset": "node presets/grok-optimized/test-preset.mjs",
+    "test:preset": "node scripts/derive-grok-preset.mjs --check && node presets/grok-optimized/test-preset.mjs",
     "test:contracts": "node scripts/test-contracts.mjs",
     "test:deployment": "powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTreeSnapshot.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTransactions.ps1",
     "safety": "node scripts/check-repository-safety.mjs",
@@ -83,18 +83,20 @@
     "verify": "npm run safety && npm run history-safety && npm test && npm run canonical-hash && npm run source-hash && npm run pack:check",
     "build:dsh": "node scripts/build-dsh.mjs",
     "build:suite": "node scripts/build-suite.mjs",
-    "test:installed": "node scripts/test-installed.mjs"
+    "test:installed": "node scripts/test-installed.mjs",
+    "derive:preset": "node scripts/derive-grok-preset.mjs",
+    "test:sdk": "node scripts/test-sdk.mjs"
   },
   "license": "(MIT AND Apache-2.0)",
   "dependencies": {
     "undici": "7.29.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
     "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.2-rc.1.grok.2",
-    "@deepseek-ai/dsh-settings": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
+    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
     "@deepseek-ai/schemastery": "3.18.2"
   },
   "peerDependenciesMeta": {
@@ -121,11 +123,11 @@
     "node": ">=24 <25"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
     "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-settings": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
     "@deepseek-ai/schemastery": "3.18.2"
   }
 }

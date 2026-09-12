@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 
-test('compiled client apply uses rc.1 remote.session and its direct RemoteResult, then unsubscribes', async () => {
+test('compiled client apply uses 0.1.5-rc.2 remote.session and its direct RemoteResult, then unsubscribes', async () => {
   assert.equal(process.env.XAI_API_KEY === '', true, 'Use the credential-scrubbing test runner');
   const source = await readFile(new URL('../lib/client.js', import.meta.url), 'utf8');
   let definition;
@@ -47,7 +47,7 @@ test('compiled client apply uses rc.1 remote.session and its direct RemoteResult
     subscriptions.set(name, callback);
     return () => subscriptions.delete(name);
   };
-  // No connection.api and no ctx.get fallback: only rc.1's documented services exist.
+  // No connection.api and no ctx.get fallback: only 0.1.5-rc.2's documented services exist.
   client.apply({
     effect(setup) { effects.push(setup()); },
     locale: { register() { return () => {}; } },
