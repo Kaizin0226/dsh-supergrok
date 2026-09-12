@@ -1,30 +1,26 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "presetId": "grok-optimized",
-  "presetVersion": "0.8.0",
+  "presetVersion": "0.9.1",
   "upstream": {
-    "version": "0.1.2-rc.1",
-    "standardSha256": "f18dd942686aa71f43ffc4fd328a712f79af113fb67a35b54cb6de4fc3b84bda"
+    "tag": "dsh-v0.1.5-rc.2",
+    "commit": "fb2c4b9e698e30edb738bca4cf0618587db7d203",
+    "standardSha256": "08a029c64fdeaabe415a5627ef73ce6f6c6bc61dadaf9989d11f9e15608907f6"
   },
   "distribution": {
-    "version": "0.1.2-rc.1.grok.2",
-    "standardSha256": "1341472beb02576ad490ce59a9f7ecdc85131f20314516a56b18f8cd4639fe15",
+    "version": "0.1.5-rc.2.grok.1",
+    "standardSha256": "36cabd056913b3cbda8bcc799f1e84bf302184ba4e03adcbed01bb8fa77a2f53",
     "localExtensions": [
-      "dsh-tool-attachment-history@1.1.0"
+      "dsh-tool-attachment-history@1.2.0"
     ]
   },
   "presetOnlyExtensions": [
-    "dsh-grok-work-state-context@1.1.0"
+    "dsh-grok-work-state-context@1.2.0"
   ],
-  "personaReference": "xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9",
+  "referenceLockSha256": "d789c2e5197ed9b8560bed00cdd7171e36521fa8da197dd21552351548f59577",
+  "personaSha256": "2d8bfb2af4e46961efa5bcb760d1d0ddf5da24e480c4e71203ff090558362b3c",
   "payload": {
-    "agent.cordis.yml": "152bc91751d1d419252ec017d1cdac18af208b1071a413e3828747ede206ae2c",
-    "preset.yml": "f98e9b4a3442457122b6d980e7c382e35221df43879aab0f21d7612ed79c5382"
-  },
-  "rollout": {
-    "id": "grok-optimized",
-    "live": "keep mounted composition",
-    "cold": "current installed composition",
-    "rollback": "restore prior composition without rewriting history"
+    "agent.cordis.yml": "2760999bd277be077d29974b5c4baddbc230d5ae8c327f80fa1263f356897ff5",
+    "preset.yml": "923c253728a5c3c482ba91895aaa805e7867013b77c80df687dbd1b84094c9e2"
   }
 }

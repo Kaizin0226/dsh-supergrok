@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/xai-org/grok-build",
+  "reviewedOn": "2026-09-12",
+  "protocol": {
+    "commit": "bc7f02eddd3d84085849dc19ed216f11c23b0571",
+    "packageVersion": "1.0.12",
+    "status": "unchanged-protocol-reference",
+    "note": "The design review does not revalidate or advance the transport protocol reference."
+  },
+  "behavior": {
+    "commit": "37949780c144e37df692e3d669051a21fec24f20",
+    "files": [
+      "crates/codegen/xai-grok-agent/templates/prompt.md"
+    ],
+    "scope": [
+      "Plain complete sentences and audience-appropriate terminology",
+      "Scoped factual code comments instead of suppressing problems",
+      "Historical memory is not current evidence"
+    ],
+    "excluded": [
+      "Grok Build identity, tool names and schemas",
+      "Memory storage layout, automatic search and automatic writes"
+    ]
+  },
+  "images": {
+    "commit": "37949780c144e37df692e3d669051a21fec24f20",
+    "files": [
+      "crates/codegen/xai-grok-shell/src/session/image_normalize.rs"
+    ],
+    "scope": [
+      "Existing image size limits and transformation notices compared with source",
+      "Existing normalization cache reuse; no image implementation change"
+    ],
+    "excluded": [
+      "Automatic image eviction or dropping",
+      "Oversized-original fallback after failed normalization"
+    ],
+    "acceptance": "source-comparison-only; not online provider acceptance"
+  }
+}

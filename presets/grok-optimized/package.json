@@ -1,16 +1,26 @@
 {
   "name": "grok-optimized-preset",
-  "version": "0.8.0",
-  "description": "Versioned distribution payload for the DSH grok-optimized user preset",
+  "version": "0.9.1",
   "private": true,
+  "type": "module",
   "files": [
     "agent.cordis.yml",
     "preset.yml",
     "base-lock.json",
-    "PROVENANCE.md",
+    "SOURCE-PROVENANCE.md",
+    "reference-lock.json",
+    "RELEASE-NOTES.md",
     "LICENSE",
     "NOTICE",
-    "Grok-Build-Apache-2.0.txt"
+    "Grok-Build-Apache-2.0.txt",
+    "PROVENANCE.md"
   ],
+  "scripts": {
+    "test": "node ./test-preset.mjs"
+  },
+  "peerDependencies": {
+    "dsh-tool-attachment-history": "1.2.0",
+    "dsh-grok-work-state-context": "1.2.0"
+  },
   "license": "(MIT AND Apache-2.0)"
 }
