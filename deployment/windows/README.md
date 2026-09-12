@@ -5,7 +5,8 @@
 ## English
 
 Developer preview: read the [service-access limitations](../../docs/SERVICE-ACCESS.md)
-before any real login. The release validates offline installation/composition;
+before any real login and the [dependency review](../../docs/DEPENDENCY-REVIEW.md)
+before building with the frozen upstream pnpm 11.7.0 toolchain. The release validates offline installation/composition;
 the sign-in and launch commands below are manual user operations, not CI steps.
 
 Requires Node.js 24, Git, PowerShell, and the Windows `tar` command. Run these
@@ -23,9 +24,10 @@ npm run verify
 npm run build:dsh -- --work-dir $work
 npm run build:dsh -- --work-dir $work --phase test
 npm run build:suite -- --work-dir $work
+npm run test:sdk -- --work-dir $work
 ```
 
-The DSH builder verifies tag `dsh-v0.1.2-rc.1` resolves to the source-lock commit,
+The DSH builder verifies tag `dsh-v0.1.5-rc.2` resolves to the source-lock commit,
 exports a clean source archive, applies the checked-in patch, installs the
 frozen upstream dependencies and builds host/client/web source. An optional
 `--upstream-source <local-git-checkout>` exports the same fixed commit without
@@ -99,7 +101,7 @@ node scripts/install-suite.mjs rollback --runtime $runtime --receipt <absolute-r
 The runtime marker must match that receipt. The displaced installation is
 preserved as `rolled-back` under its transaction; an earlier managed runtime
 is restored when one existed. Rolling back a first installation leaves the
-runtime target absent. User data is never reverted, deleted or rewritten.
+runtime target absent. User data is never reverted, deleted or rewritten. DSH 0.1.5 uses a different session format from the previous preview. Use a new runtime and data directory; runtime rollback is not a data-format downgrade.
 
 The older `Install-GrokOptimizedPreset.ps1` / `Rollback-GrokOptimizedPreset.ps1`
 helpers remain tested for their original two-YAML-file update contract. New
@@ -109,6 +111,7 @@ rollout tooling is not part of this procedure.
 ## 简体中文
 
 开发者预览版：真实登录前请阅读[服务接入限制](../../docs/SERVICE-ACCESS.md)。
+构建前请阅读[依赖检查](../../docs/DEPENDENCY-REVIEW.md)，了解冻结上游 pnpm 11.7.0 工具链的已知告警。
 本次发行验证的是离线安装与组合；下方登录和启动属于用户手动操作，不是 CI 步骤。
 
 需要 Node.js 24、Git、PowerShell 和 Windows 的 `tar`。从仓库检出目录执行，
@@ -124,9 +127,10 @@ npm run verify
 npm run build:dsh -- --work-dir $work
 npm run build:dsh -- --work-dir $work --phase test
 npm run build:suite -- --work-dir $work
+npm run test:sdk -- --work-dir $work
 ```
 
-构建器验证 `dsh-v0.1.2-rc.1` 标签解析为源码锁的精确提交，导出干净源码、应用补丁、
+构建器验证 `dsh-v0.1.5-rc.2` 标签解析为源码锁的精确提交，导出干净源码、应用补丁、
 安装冻结上游依赖并构建 host/client/web。可选 `--upstream-source <local-git-checkout>`
 从本地克隆导出相同固定提交，不读取未提交文件，也无需重新远端克隆。
 配套构建器编译扩展并打包 provider 和全部改动核心包，生成完整锁定依赖的运行组合。
@@ -187,3 +191,5 @@ node scripts/install-suite.mjs rollback --runtime $runtime --receipt <absolute-r
 
 旧 `Install-GrokOptimizedPreset.ps1`／`Rollback-GrokOptimizedPreset.ps1` 继续按原两份 YAML 更新契约测试。
 新组合安装使用上述完整 preset。历史 xAI API 部署工具不属于本流程。
+
+新版 DSH 使用不同的会话存储格式。请为本预览版选择新的运行与数据目录；本工具不迁移旧聊天，运行程序回滚不等于数据格式降级。

@@ -4,6 +4,24 @@
 
 ## English
 
+### suite-v0.8.0-preview.1
+
+Updates the supported baseline to DSH 0.1.5-rc.2 with four source-built core
+overrides (0.1.5-rc.2.grok.1), provider 0.8.0-hardened.1, Grok preset 0.9.1 and
+three 1.2.0 extensions. The local functional reference is 0.1.5-rc.2.grok.3.
+The provider retains its required explicit proxy and adds the request-boundary
+event. Native V3 session events and projections support image recall and work
+state; the preset preserves standard capabilities and improves communication
+and evidence requirements.
+
+Windows + Node.js 24; source and reproducible build/install tools only.
+Use new runtime and data directories. Existing conversation migration is not
+provided, and runtime rollback does not downgrade data formats. See the
+[installation guide](../deployment/windows/README.md#english) and
+[validation results](VALIDATION.md). The frozen upstream build workspace has
+known dependency advisories; the installed npm graph has a separate clean audit.
+See the [dependency review](DEPENDENCY-REVIEW.md). Real service acceptance is not claimed.
+
 ### suite-v0.7.0-preview.2
 
 [Source release](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2)
@@ -14,7 +32,7 @@ and a dedicated Grok-optimized mode within DSH. Required core patches,
 extensions, build/install tools and tests support these two capabilities.
 It requires Windows, Node.js 24 and DSH
 `0.1.2-rc.1` with this repository's core patches, producing combination
-`0.1.2-rc.1.grok.2`. Follow the [build and installation guide](../deployment/windows/README.md#english);
+`0.1.2-rc.1.grok.2`. Follow its [versioned build and installation guide](https://github.com/Kaizin0226/dsh-supergrok/blob/suite-v0.7.0-preview.2/deployment/windows/README.md#english);
 other DSH versions and unpatched installations are not validated.
 
 | Component | Version |
@@ -64,6 +82,18 @@ The documented run-mode tests and installed runtime do not use these features.
 
 ## 简体中文
 
+### suite-v0.8.0-preview.1
+
+适配基线更新为 DSH 0.1.5-rc.2，搭配四个源码构建核心包（0.1.5-rc.2.grok.1）、
+provider 0.8.0-hardened.1、Grok 预设 0.9.1 和三个 1.2.0 扩展。
+本地功能参考为 0.1.5-rc.2.grok.3。Provider 保留必填显式代理并新增请求检查事件；
+图片召回和工作状态使用原生 V3 事件与投影。预设保留 standard 能力并完善表达与证据要求。
+
+支持 Windows＋Node.js 24，仅提供源码及可复现构建安装工具。使用新的运行和数据目录；
+不提供旧聊天迁移，运行程序回滚不降级数据格式。参见[安装指南](../deployment/windows/README.md#简体中文)
+和[验证结果](VALIDATION.md)。上游冻结构建工作区存在已知依赖告警；安装 npm 依赖图的检查结果
+另行列出，详见[依赖检查](DEPENDENCY-REVIEW.md)。不宣称完成真实服务验收。
+
 ### suite-v0.7.0-preview.2
 
 [源码发行](https://github.com/Kaizin0226/dsh-supergrok/releases/tag/suite-v0.7.0-preview.2)
@@ -73,7 +103,7 @@ The documented run-mode tests and installed runtime do not use these features.
 必需的核心补丁、扩展、构建安装工具和测试均为这两项功能的配套实现。
 要求 Windows、Node.js 24，以及 DSH `0.1.2-rc.1` 搭配本仓库核心补丁，
 构建后的核心组合为 `0.1.2-rc.1.grok.2`。
-请遵循[构建与安装指南](../deployment/windows/README.md#简体中文)；
+请遵循[对应版本的构建与安装指南](https://github.com/Kaizin0226/dsh-supergrok/blob/suite-v0.7.0-preview.2/deployment/windows/README.md#简体中文)；
 其他 DSH 版本和未打补丁的安装尚未验证。
 
 | 组件 | 版本 |

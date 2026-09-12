@@ -6,6 +6,7 @@ Copyright 2026 DeepSeek (MIT).
 
 Grok Build reference and adapted protocol, image policy and persona material:
 Copyright 2023-2026 SpaceXAI. Licensed under Apache License 2.0.
-Reference: xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9.
+References: xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9
+and @37949780c144e37df692e3d669051a21fec24f20; protocol @bc7f02eddd3d84085849dc19ed216f11c23b0571.
 Adaptations use native DSH tools, permissions, models and sessions; they do not
 include or launch the Grok Build runtime. See THIRD-PARTY-NOTICES.md for scope.

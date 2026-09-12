@@ -8,7 +8,7 @@ its package expression is `MIT AND Apache-2.0`.
 | Material | Source and applicable terms |
 | --- | --- |
 | Original provider | wangyaominde/dsh-llm-grok-oauth at `108cc76224d1845b5c88602f7c7a24bb1ced0497`; MIT, copyright wangyaominde |
-| DSH core patch and standard composition | deepseek-ai/deepseek-harness at `a66e4702047846cdaa10c66c9d3df3951f5ea70d`; [DeepSeek MIT](licenses/DSH-MIT.txt) |
+| DSH core patch and standard composition | deepseek-ai/deepseek-harness at `fb2c4b9e698e30edb738bca4cf0618587db7d203`; [DeepSeek MIT](licenses/DSH-MIT.txt) |
 | Grok protocol conventions, image preparation policy and adapted persona guidance | xai-org/grok-build snapshots recorded in [provenance](UPSTREAM-PROVENANCE.md); [Apache-2.0 with original attribution](licenses/Grok-Build-Apache-2.0.txt), copyright 2023–2026 SpaceXAI |
 | Work-state and attachment-history extensions; build/install helpers | Original DSH integration work by Kaizin0226; MIT |
 
@@ -34,7 +34,7 @@ Kaizin0226 的原创新增源码和文档采用 MIT。组合 provider／preset �
 | 内容 | 来源与适用条款 |
 | --- | --- |
 | 原 provider | wangyaominde/dsh-llm-grok-oauth，固定于 `108cc76224d1845b5c88602f7c7a24bb1ced0497`；MIT，版权 wangyaominde |
-| DSH 核心补丁与 standard 组合 | deepseek-ai/deepseek-harness，固定于 `a66e4702047846cdaa10c66c9d3df3951f5ea70d`；[DeepSeek MIT](licenses/DSH-MIT.txt) |
+| DSH 核心补丁与 standard 组合 | deepseek-ai/deepseek-harness，固定于 `fb2c4b9e698e30edb738bca4cf0618587db7d203`；[DeepSeek MIT](licenses/DSH-MIT.txt) |
 | Grok 协议惯例、图片准备策略与改编 persona | [来源说明](UPSTREAM-PROVENANCE.md)锁定的 xai-org/grok-build 快照；[Apache-2.0 与原始署名](licenses/Grok-Build-Apache-2.0.txt)，版权 2023–2026 SpaceXAI |
 | 工作状态、历史图片扩展与构建安装工具 | Kaizin0226 原创 DSH 集成，MIT |
 

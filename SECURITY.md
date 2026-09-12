@@ -10,8 +10,8 @@ Security reports must be handled privately by the repository owner and must not 
 
 ## Reporting and supported versions
 
-Security maintenance covers provider `0.7.0-hardened.1`, preset `0.8.0` and the
-DSH `0.1.2-rc.1.grok.2` combination in the README. Older releases and other
+Security maintenance covers provider `0.8.0-hardened.1`, preset `0.9.1` and the
+DSH `0.1.5-rc.2.grok.3` combination in the README. Older releases and other
 combinations are not maintained by this preview. Responses are best-effort,
 without a response-time commitment.
 
@@ -21,6 +21,9 @@ The initial `suite-v0.7.0-preview.1` source used affected Vitest `4.0.18` for
 extension development. Use the corrected preview for development; do not enable
 Vitest UI, Browser Mode or a network-exposed API on the initial preview.
 The documented test commands use run mode and the installed runtime excludes Vitest.
+The frozen upstream source workspace has additional known dependency advisories,
+including pnpm 11.7.0. See the [dependency review](docs/DEPENDENCY-REVIEW.md) for
+versions, affected scope and build constraints.
 
 Submit vulnerabilities through [Report a vulnerability](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new).
 Private reporting is enabled and requires a GitHub login. Do not disclose
@@ -43,14 +46,16 @@ address. A clean dependency audit does not establish service authorization.
 须先修复原因，不屏蔽或绕过检查，也不先提交后删除。安全报告由所有者私密处理，
 Issue 不得包含凭据或生产证据。
 
-安全维护范围为 README 中的 provider `0.7.0-hardened.1`、preset `0.8.0` 和 DSH
-`0.1.2-rc.1.grok.2` 组合；本预览版不维护旧版或其他组合。反馈采取尽力而为原则，不承诺响应时间。
+安全维护范围为 README 中的 provider `0.8.0-hardened.1`、preset `0.9.1` 和 DSH
+`0.1.5-rc.2.grok.3` 组合；本预览版不维护旧版或其他组合。反馈采取尽力而为原则，不承诺响应时间。
 
 配套测试工具现固定为 Vitest `4.1.11`，已修复
 [GHSA-5xrq-8626-4rwp](https://github.com/advisories/GHSA-5xrq-8626-4rwp)。
 首个 `suite-v0.7.0-preview.1` 源码的扩展开发依赖使用了受影响的 Vitest `4.0.18`。
 开发时请使用修正后的预览版；不要在首版上启用 Vitest UI、Browser Mode 或向网络开放 API。
 文档中的测试命令使用 run 模式，安装后的运行环境不包含 Vitest。
+上游冻结源码工作区另有已知依赖告警，包括 pnpm 11.7.0；版本、影响范围和构建约束见
+[依赖检查](docs/DEPENDENCY-REVIEW.md)。
 
 通过 [Report a vulnerability／私密漏洞报告](https://github.com/Kaizin0226/dsh-supergrok/security/advisories/new)提交漏洞。
 私密报告功能已启用，需要登录 GitHub。不得在公开 Issue 中披露漏洞细节。

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { cpSync, existsSync, globSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 
@@ -41,10 +41,11 @@ run([...initialization, '--apply'], 1);
 const proxyReject = [...initialization]; proxyReject[proxyReject.length - 1] = 'https://example.invalid';
 run(proxyReject, 1);
 console.log('PASS fresh data initialization and overwrite/proxy refusal');
-const packageTests = join(runtime, 'work-state-tests');
-cpSync(join(root, 'extensions/dsh-grok-work-state-context'), packageTests, { recursive: true });
-const files = globSync('tests/*.test.mjs', { cwd: packageTests }).map(file => join(packageTests, file));
-console.log(run(['--test', ...files]));
+const packageTests = join(runtime, 'extension-tests');
+cpSync(join(root, 'test/extensions'), packageTests, { recursive: true });
+const files = globSync('*.test.mjs', { cwd: packageTests }).map(file => join(packageTests, file));
+console.log(run(['--import', pathToFileURL(join(packageTests, 'offline.mjs')).href, '--test', ...files]));
+console.log(run(['--require', join(root, 'test/offline-guard.cjs'), join(root, 'presets/grok-optimized/test-generation.mjs'), runtime, join(root, 'test/preset-baseline'), fixture]));
 for (const profile of ['web', 'headless']) {
   const output = run([join(root, 'test/installed-profile.mjs'), profile, data, runtime]);
   const result = output.split(/\r?\n/).filter(line => line.startsWith('{"profile":')).map(line => JSON.parse(line)).at(-1);

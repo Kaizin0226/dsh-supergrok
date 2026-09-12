@@ -1,6 +1,6 @@
 # Service access and licensing / 服务接入与许可
 
-Reviewed: **2026-09-07**. This is a technical source/documentation review, not
+Reviewed: **2026-09-13**. This is a technical source/documentation review, not
 a legal opinion or a grant of service access.
 
 ## English
@@ -40,7 +40,7 @@ login or model request; the preview has no live-service validation result.
 
 ## 中文
 
-核对日期：**2026-09-07**。这是源码与文档层面的技术核对，不是法律意见或服务授权。
+核对日期：**2026-09-13**。这是源码与文档层面的技术核对，不是法律意见或服务授权。
 
 原 provider 与 DSH 源码适用 MIT；所选 Grok Build 衍生内容保留 Apache-2.0 许可与署名，
 见[第三方说明](../THIRD-PARTY-NOTICES.md)与[固定来源](../UPSTREAM-PROVENANCE.md)。

@@ -25,7 +25,11 @@ versions and limitations. Keep both README languages in one README.md with
 language anchors. Public commits, PRs and documentation should describe durable,
 reader-relevant changes and completed verification without internal progress
 updates or drafting placeholders. Preserve original license texts. Update provenance
-and locks when their inputs change; do not suppress mismatches. Use issues for
+and locks when their inputs change; do not suppress mismatches. The suite builder's
+explicit `--update-locks` option regenerates the reviewed npm graphs for a prepared
+build; ordinary builds preserve registry resolutions and refresh only local
+tarball integrity. Review dependency changes and repeat the applicable build and
+installation checks after regeneration. Use issues for
 minimal synthetic reproductions and focused feature proposals, without real
 logs, settings, conversations or account screenshots. Follow [SECURITY.md](SECURITY.md)
 for vulnerabilities. Discuss large features before investing in a large patch.
@@ -47,6 +51,8 @@ Maintenance is best-effort; untested combinations are not supported.
 
 文档保持中英双语，命令、版本和限制相互对应；README 两种语言放在同一 README.md 中，以锚点跳转，许可证保留原文。
 公开提交、PR 及文档只记录对读者有长期价值的变更和已完成验证，不夹带内部进度或起草占位内容。
-来源与锁定输入变化时同步更新声明，不屏蔽不一致。Issue 仅提供最小合成复现或聚焦功能建议，
+来源与锁定输入变化时同步更新声明，不屏蔽不一致。配套构建器的显式 `--update-locks` 选项
+可在已准备的构建目录重新生成 npm 依赖锁；普通构建保留注册表解析结果，仅刷新本地产物校验值。
+重新生成后审阅依赖变化并完成相应构建和安装验证。Issue 仅提供最小合成复现或聚焦功能建议，
 不附真实日志、设置、聊天或账户截图。漏洞按 [SECURITY.md](SECURITY.md) 私密反馈。
 大功能先讨论再投入；维护尽力而为，不承诺未经验证组合的支持。

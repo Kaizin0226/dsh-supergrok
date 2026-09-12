@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
-import { readFileSync, realpathSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -15,6 +15,10 @@ assert.ok(process.argv[3] && process.argv[4], 'Explicit isolated home and runtim
 const home = resolve(process.argv[3]);
 const runtime = resolve(process.argv[4]);
 process.env.DSH_HOME = home;
+for (const key of ['HOME','USERPROFILE','APPDATA','LOCALAPPDATA','DSH_AGENTS_HOME']) {
+  process.env[key] = resolve(home, 'isolated-user', key.toLowerCase());
+  mkdirSync(process.env[key], { recursive: true });
+}
 process.env.DSH_TELEMETRY_DISABLED = '1';
 process.env.DSH_SUPERGROK_ACCEPTANCE = '1';
 for (const key of Object.keys(process.env)) if (/API_KEY|TOKEN|SECRET|AUTHORIZATION/i.test(key)) delete process.env[key];
@@ -23,7 +27,14 @@ process.chdir(home);
 const blocked = [];
 const nativeConnect = net.Socket.prototype.connect;
 const originalLog = console.log.bind(console);
-console.log = (...args) => originalLog(...args.map(value => typeof value === 'string' ? value.replace(/([?&]token=)[^\s&]+/g, '$1<ephemeral-redacted>') : value));
+let launchUrl;
+console.log = (...args) => {
+  for (const value of args) if (typeof value === 'string') {
+    const match = /dsh web: (http:\/\/[^\s]+)/.exec(value);
+    if (match) launchUrl = new URL(match[1]);
+  }
+  originalLog(...args.map(value => typeof value === 'string' ? value.replace(/([?&]token=)[^\s&]+/g, '$1<ephemeral-redacted>') : value));
+};
 const forbid = name => () => { blocked.push(name); throw Error(`Offline profile forbids ${name}`); };
 globalThis.fetch = forbid('fetch');
 net.Socket.prototype.connect = forbid('socket connect');
@@ -56,6 +67,7 @@ const configPath = resolve(home, 'profiles', profile, 'cordis.yml');
 
 const patches = [
   ...loaded.layers.flatMap(layer => layer.patches),
+  ...loaded.patches,
   { id: 'session-telemetry-otel', disabled: true },
   { id: 'session-title-llm', disabled: true },
   { id: 'agent-default-model', config: { provider: 'offline-fixture', model: 'synthetic' } },
@@ -81,6 +93,26 @@ try {
     const server = ctx.webServer.server;
     const address = server.address();
     assert.ok(address && typeof address === 'object');
+    const localGet = (path, headers = {}) => new Promise((resolveResponse, reject) => {
+      const request = http.get({ host: '127.0.0.1', port: address.port, path, headers,
+        agent: Object.assign(new http.Agent({ keepAlive: false }), { createConnection: (_options, callback) => {
+          const socket = new net.Socket(); nativeConnect.call(socket, { host: '127.0.0.1', port: address.port }, callback); return socket;
+        } }),
+      }, response => {
+        const chunks = []; response.on('data', chunk => chunks.push(chunk));
+        response.on('end', () => resolveResponse({ status: response.statusCode, headers: response.headers, body: Buffer.concat(chunks).toString('utf8') }));
+      });
+      request.on('error', reject); request.setTimeout(5000, () => request.destroy(Error('Local HTTP timeout')));
+    });
+    assert.ok(launchUrl && Number(launchUrl.port) === address.port);
+    const exchange = await localGet(launchUrl.pathname + launchUrl.search);
+    assert.equal(exchange.status, 303);
+    const cookie = exchange.headers['set-cookie']?.[0]?.split(';')[0];
+    assert.ok(cookie);
+    const document = await localGet('/', { cookie, 'accept-encoding': 'identity' });
+    assert.equal(document.status, 200);
+    assert.ok(document.body.includes('dsh-llm-grok-oauth'));
+    httpChecks.push({ authenticatedDocument: true, providerClientIncluded: true });
     // Only this fixture-owned loopback listener is allowed through the guard.
     for (const encoding of ['gzip, deflate, br', 'identity']) {
       const status = await new Promise((resolveStatus, reject) => {
@@ -95,6 +127,7 @@ try {
       httpChecks.push({encoding,status});
     }
     const { assembleContextFor } = await imp('@deepseek-ai/dsh-agent');
+    const { scopeOf } = await imp('@deepseek-ai/dsh-scope');
     const { SessionId } = await imp('@deepseek-ai/dsh-session');
     for (const preset of ['standard', 'grok-optimized']) {
       const { agent } = await ctx.agents.create({
@@ -103,8 +136,9 @@ try {
         agentOptions: { provider: 'offline-fixture', model: 'synthetic' },
         setup: async scope => { await ctx.agentPresets.mount(scope, preset); },
       });
-      const schemas = ctx.tools.schemas(agent);
+      const schemas = ctx.tools.schemas(scopeOf(agent.ctx));
       assert.equal(schemas.filter(schema => schema.name === 'recall_image_attachment').length, 1, preset);
+      agent.session.append('turn/start', { turn: 1 });
       agent.session.append('todo/write', { todos: [{ content: 'offline-state-fixture', status: 'pending' }] });
       const prompt = await ctx.systemPrompt.assemble(assembleContextFor(agent));
       const workStateCount = prompt.contexts.filter(item => item.name === 'grok-optimized:work-state').length;

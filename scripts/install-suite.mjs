@@ -114,7 +114,10 @@ if (command === 'install') {
     for (const profile of ['web', 'headless']) {
       const directory = join(candidate, 'profiles', profile);
       mkdirSync(directory, { recursive: true });
-      writeFileSync(join(directory, 'cordis.yml'), `- id: llm-grok-oauth\n  name: dsh-llm-grok-oauth\n  config:\n    proxyUrl: ${JSON.stringify(proxyUrl)}\n`);
+      save(join(directory, 'package.json'), { name: `dsh-profile-${profile}`, private: true, dependencies: {},
+        dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', profile === 'web' ? '@deepseek-ai/dsh-web-app' : '@deepseek-ai/dsh-headless', 'dsh-llm-grok-oauth'], patchReload: profile === 'web' ? 'live' : 'startup' } } });
+      writeFileSync(join(directory, 'cordis.patch.yml'), `- id: llm-grok-oauth\n  config:\n    proxyUrl: ${JSON.stringify(proxyUrl)}\n`);
+      writeFileSync(join(directory, 'cordis.yml'), '[]\n');
       symlinkSync(realpathSync(join(runtime, 'node_modules')), join(directory, 'node_modules'), 'junction');
     }
     ordinaryAncestors(data);

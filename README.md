@@ -8,8 +8,8 @@
 who can build and troubleshoot Windows + Node.js 24 setups. This is not a stable
 release or an officially supported third-party OAuth client.
 
-**DSH compatibility: `0.1.2-rc.1` with this repository's required core patches,
-producing core combination `0.1.2-rc.1.grok.2`.** Other DSH versions have not been
+**DSH compatibility: `0.1.5-rc.2` with this repository's required core patches,
+matching local functional reference `0.1.5-rc.2.grok.3` with four patched core packages at `0.1.5-rc.2.grok.1`.** Other DSH versions have not been
 validated. Use this repository's [build and installation workflow](deployment/windows/README.md#english)
 to install the complete compatible combination; installing only the provider into
 an unpatched DSH installation does not supply the full integration.
@@ -35,11 +35,11 @@ or npm publication.
 
 | Component | Version / contract |
 | --- | --- |
-| SuperGrok provider | `0.7.0-hardened.1`; required explicit loopback HTTP proxy |
-| Grok-optimized preset | `0.8.0` |
-| DSH core overlay | `0.1.2-rc.1.grok.2`, based on exact tag commit `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
-| Upstream CLI | `@deepseek-ai/dsh@0.1.2-rc.1`, with source-built core overrides |
-| Attachment history, recall tool, work-state context | `1.1.0` each |
+| SuperGrok provider | `0.8.0-hardened.1`; required explicit loopback HTTP proxy |
+| Grok-optimized preset | `0.9.1` |
+| DSH core packages | Four packages at `0.1.5-rc.2.grok.1`, based on exact tag commit `fb2c4b9e698e30edb738bca4cf0618587db7d203` |
+| Upstream CLI | `@deepseek-ai/dsh@0.1.5-rc.2`, with source-built core overrides |
+| Attachment history, recall tool, work-state context | `1.2.0` each |
 
 See [component lock](components.lock.json), [source provenance](UPSTREAM-PROVENANCE.md)
 and [Windows build/install guide](deployment/windows/README.md).
@@ -66,6 +66,8 @@ and [Windows build/install guide](deployment/windows/README.md).
   cross-model option is enabled. The preset does not pin a Grok model or add
   an external agent runtime.
 
+The optional [request-boundary event](docs/REQUEST-BOUNDARY.md) allows extensions to reject a model POST or disable its automatic authentication replay.
+
 ### Build and verify
 
 From a fresh checkout, run `npm ci --ignore-scripts`, then `npm run verify`.
@@ -89,7 +91,9 @@ Source licensing and successful login do not establish third-party service
 authorization. Protocols and account eligibility can change. Live OAuth, model
 and image inference, and the production usage-panel UI have not been accepted
 for this release. macOS/Linux and existing data migration are outside the
-supported preview workflow. No availability or production-support promise is made.
+supported preview workflow. The frozen upstream build dependencies have known
+advisories; review [dependency findings and build constraints](docs/DEPENDENCY-REVIEW.md).
+No availability or production-support promise is made.
 
 DSH owns credentials, sessions, permission enforcement and native tools.
 The [old xAI API contracts](contracts/xai-dsh/README.md) are historical reference
@@ -113,8 +117,8 @@ time or compatibility guarantee beyond the documented tested combination.
 **开发者预览版 · 非官方实验性集成。** 面向能够自行构建和排查 Windows＋Node.js 24 环境的开发者。
 尚非稳定正式版，也不代表第三方 OAuth 客户端已获官方支持。
 
-**DSH 适配基线为 `0.1.2-rc.1`，必须搭配本仓库核心补丁；构建后的核心组合版本为
-`0.1.2-rc.1.grok.2`。** 其他 DSH 版本尚未验证。请使用本仓库的
+**DSH 适配基线为 `0.1.5-rc.2`，必须搭配本仓库核心补丁；功能参考为
+`0.1.5-rc.2.grok.3`，四个补丁包的版本均为 `0.1.5-rc.2.grok.1`。** 其他 DSH 版本尚未验证。请使用本仓库的
 [构建与安装流程](deployment/windows/README.md#简体中文)安装完整兼容组合；
 仅在未打补丁的原版 DSH 中安装 provider，无法获得本项目的完整集成功能。
 
@@ -133,11 +137,11 @@ Provider、Grok 预设、必需的核心补丁、原生工作状态与历史图�
 
 | 组件 | 版本与用途 |
 | --- | --- |
-| SuperGrok provider | `0.7.0-hardened.1`，新增必填显式代理 |
-| Grok 优化预设 | `0.8.0` |
-| DSH 核心补丁组合 | `0.1.2-rc.1.grok.2`，上游精确提交 `a66e4702047846cdaa10c66c9d3df3951f5ea70d` |
-| 上游启动器 | `@deepseek-ai/dsh@0.1.2-rc.1`，搭配本仓库构建的五个核心包 |
-| 图片历史、图片召回、工作状态扩展 | 均为 `1.1.0` |
+| SuperGrok provider | `0.8.0-hardened.1`，新增必填显式代理 |
+| Grok 优化预设 | `0.9.1` |
+| DSH 核心补丁包 | 四个包均为 `0.1.5-rc.2.grok.1`，上游精确提交 `fb2c4b9e698e30edb738bca4cf0618587db7d203` |
+| 上游启动器 | `@deepseek-ai/dsh@0.1.5-rc.2`，搭配本仓库构建的四个核心包 |
+| 图片历史、图片召回、工作状态扩展 | 均为 `1.2.0` |
 
 完整来源与锁定关系见 [组件锁](components.lock.json)、[源码来源](UPSTREAM-PROVENANCE.md)。
 
@@ -152,6 +156,8 @@ Provider、Grok 预设、必需的核心补丁、原生工作状态与历史图�
 - 全局默认仍为 `standard`。本地 standard 与 Grok 模式各挂载一次图片召回，工作状态扩展仅属于 `grok-optimized`。
   来源锁明确区分上游 standard、本地 standard 扩展和 Grok 专属能力。
 - 子 Agent 默认继承模型，跨模型选择沿用原生显式开放机制。不写死 Grok 型号，不启动另一套 Agent 运行时。
+
+可选的[请求发送检查接口](docs/REQUEST-BOUNDARY.md)允许扩展拒绝推理 POST，或禁止其自动认证重试。
 
 ### 构建、安装与验证
 
@@ -176,7 +182,8 @@ Provider、Grok 预设、必需的核心补丁、原生工作状态与历史图�
 
 登录前请阅读[服务接入评估](docs/SERVICE-ACCESS.md)。源码许可及登录成功均不构成第三方服务接入授权。
 上游协议与账户资格可能变化。本预览版未验证真实 OAuth、模型推理、图片推理及生产额度面板。
-macOS／Linux 和既有数据迁移不属于首版支持流程；不承诺持续可用或生产支持。
+macOS／Linux 和既有数据迁移不属于首版支持流程。上游冻结构建依赖存在已知告警，
+请阅读[依赖检查与构建约束](docs/DEPENDENCY-REVIEW.md)；不承诺持续可用或生产支持。
 
 ### 贡献与反馈
 
