@@ -2,15 +2,27 @@
   "schemaVersion": 1,
   "dsh": {
     "package": "@deepseek-ai/dsh",
-    "version": "0.1.2-rc.1",
-    "distributionVersion": "0.1.2-rc.1.grok.2",
-    "commit": "a66e4702047846cdaa10c66c9d3df3951f5ea70d"
+    "version": "0.1.5-rc.2",
+    "upstreamTag": "dsh-v0.1.5-rc.2",
+    "upstreamCommit": "fb2c4b9e698e30edb738bca4cf0618587db7d203",
+    "commit": "fb2c4b9e698e30edb738bca4cf0618587db7d203",
+    "distributionVersion": "0.1.5-rc.2.grok.3"
+  },
+  "distribution": {
+    "version": "0.1.5-rc.2.grok.1",
+    "patchedPackages": {
+      "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
+      "@deepseek-ai/dsh-agent-loop": "0.1.5-rc.2.grok.1",
+      "@deepseek-ai/dsh-api-session-controller": "0.1.5-rc.2.grok.1",
+      "@deepseek-ai/dsh-agent-presets": "0.1.5-rc.2.grok.1"
+    }
   },
   "provider": {
     "package": "dsh-llm-grok-oauth",
-    "version": "0.7.0-hardened.1",
+    "version": "0.8.0-hardened.1",
     "upstreamRepository": "https://github.com/wangyaominde/dsh-llm-grok-oauth.git",
-    "upstreamCommit": "108cc76224d1845b5c88602f7c7a24bb1ced0497"
+    "upstreamCommit": "108cc76224d1845b5c88602f7c7a24bb1ced0497",
+    "maintenanceSource": "lib/ is the maintained JavaScript source for provider input preparation and account usage support"
   },
   "grokBuildProtocolReference": {
     "repository": "https://github.com/xai-org/grok-build.git",
@@ -19,15 +31,19 @@
   },
   "preset": {
     "id": "grok-optimized",
-    "version": "0.8.0",
-    "personaReference": "xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9"
+    "version": "0.9.1",
+    "designReferences": "presets/grok-optimized/reference-lock.json"
   },
   "xaiDshContracts": {
     "version": "0.1.0"
   },
+  "suite": {
+    "version": "0.8.0",
+    "release": "suite-v0.8.0-preview.1"
+  },
   "extensions": {
-    "dsh-attachment-history": "1.1.0",
-    "dsh-tool-attachment-history": "1.1.0",
-    "dsh-grok-work-state-context": "1.1.0"
+    "dsh-attachment-history": "1.2.0",
+    "dsh-tool-attachment-history": "1.2.0",
+    "dsh-grok-work-state-context": "1.2.0"
   }
 }

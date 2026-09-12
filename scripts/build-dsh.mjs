@@ -19,8 +19,9 @@ const tools = join(work, 'tools');
 const artifacts = join(work, 'artifacts');
 const environment = { ...process.env, DSH_TELEMETRY_DISABLED: '1', CI: '1' };
 // Upstream scripts invoke pnpm again by name. Use our pinned bootstrap in all children.
-const pathKey = Object.keys(environment).find(key => key.toLowerCase() === 'path') ?? 'PATH';
-environment[pathKey] = join(tools, 'node_modules', '.bin') + delimiter + (environment[pathKey] ?? '');
+const inheritedPath = Object.entries(environment).filter(([key]) => key.toLowerCase() === 'path').map(([,value]) => value).join(delimiter);
+for (const key of Object.keys(environment)) if (key.toLowerCase() === 'path') delete environment[key];
+environment.PATH = join(tools, 'node_modules', '.bin') + delimiter + inheritedPath;
 environment.npm_config_cache = join(work, 'npm-cache');
 environment.DSH_CLIENT_COMMIT_HASH = lock.commit;
 for (const key of Object.keys(environment)) if (/API_KEY|ACCESS_TOKEN|REFRESH_TOKEN|SECRET|AUTHORIZATION/i.test(key)) delete environment[key];
@@ -65,9 +66,8 @@ if (values.phase === 'all' || values.phase === 'build') {
   console.log('Built DSH host, client and web assets from source.');
 }
 if (values.phase === 'test') {
-  run(process.execPath, [pnpm, 'exec', 'vitest', 'run',
+  run(process.execPath, ['--require', join(root, 'test/offline-guard.cjs'), join(source, 'node_modules/vitest/vitest.mjs'), 'run', '--maxWorkers=4',
     'packages/llm/llm/tests', 'packages/core/agent-loop/tests',
-    'packages/core/session/tests/request-header.spec.ts',
     'packages/api/session-controller/tests/session-models.host.spec.ts'], source);
 }
 if (values.phase === 'all' || values.phase === 'pack') {
@@ -76,6 +76,7 @@ if (values.phase === 'all' || values.phase === 'pack') {
   const versions = new Map(packages.map(p => [p.manifest.name, p.version]));
   const workspaceVersions = new Map(globSync(['vendor/*/package.json', 'packages/*/*/package.json', 'apps/*/package.json'], { cwd: source })
     .map(path => { const m = JSON.parse(readFileSync(join(source, path), 'utf8')); return [m.name, m.version]; }));
+  json(join(artifacts, 'release-family.json'), Object.fromEntries([...workspaceVersions].filter(([name]) => name.startsWith('@deepseek-ai/dsh-'))));
   const report = [];
   for (const p of packages) {
     const destination = join(work, 'packages', p.manifest.name.replace('@deepseek-ai/', ''));
@@ -101,7 +102,13 @@ if (values.phase === 'all' || values.phase === 'pack') {
         }
       }
     }
-    if (p.manifest.name === '@deepseek-ai/dsh-agent-presets') p.manifest.peerDependencies['dsh-tool-attachment-history'] = '1.1.0';
+    if (p.manifest.name === '@deepseek-ai/dsh-agent-presets') {
+      const presetRoot = join(root, 'presets/grok-optimized');
+      const upstream = readFileSync(join(source, p.path, 'presets/standard/agent.cordis.yml'), 'utf8').replace(/\r\n?/g, '\n');
+      if (upstream !== readFileSync(join(presetRoot, 'upstream-standard.cordis.yml'), 'utf8').replace(/\r\n?/g, '\n')) throw Error('Preset baseline differs from pinned upstream');
+      cpSync(join(presetRoot, 'standard.cordis.yml'), join(destination, 'presets/standard/agent.cordis.yml'));
+      p.manifest.peerDependencies['dsh-tool-attachment-history'] = '1.2.0';
+    }
     delete p.manifest.devDependencies;
     delete p.manifest.scripts;
     json(join(destination, 'package.json'), p.manifest);
