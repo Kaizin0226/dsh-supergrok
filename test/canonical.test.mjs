@@ -34,13 +34,13 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
     providerGroup: PROVIDER,
     catalogRpc: 'session.modelCatalog',
     liveCatalogReadOnly: true,
-    editableFields: ['modelsRefreshSeconds'],
+    editableFields: ['modelsRefreshSeconds', 'proxyUrl'],
     otherProviderFailuresExcluded: true,
     polling: false,
   });
   assert.deepEqual(manifest.allowedOrigins, ALLOWED_ORIGINS);
-  assert.equal(manifest.proxyUrl, undefined);
-  assert.deepEqual(manifest.proxyPolicy, { setting: 'proxyUrl', required: true, protocol: 'http:', hosts: ['127.0.0.1', '[::1]'], credentials: false, directFallback: false, environmentDiscovery: false, changeRequiresRestart: true });
+  assert.equal(manifest.proxy.required, true);
+  assert.equal(manifest.proxy.directFallback, false);
   assert.equal(manifest.acceptanceEmptyToolCatalogGuard, true);
   assert.equal(manifest.acceptanceOAuthNetworkDisabled, true);
   assert.equal(manifest.acceptanceSingleInferenceLatch, true);
@@ -56,17 +56,12 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
   assert.equal(manifest.dynamicAccountCatalog.overlapAllowed, false);
   assert.equal(manifest.dynamicAccountCatalog.serveStaleOnRefreshFailure, false);
   assert.equal(manifest.dynamicAccountCatalog.revalidateBeforeTurn, true);
-  assert.equal(manifest.dynamicAccountCatalog.turnScopedPreparePreflight, 'force-fresh-on-new-turn');
-  assert.equal(manifest.dynamicAccountCatalog.forceFreshCatalogPerInference, false);
+  assert.equal(manifest.dynamicAccountCatalog.turnScopedPreparePreflight, 'native-call-preflight');
+  assert.equal(manifest.dynamicAccountCatalog.forceFreshCatalogPerInference, true);
   assert.deepEqual(manifest.dynamicAccountCatalog.preparedDispatchContext, {
-    fields: ['sessionId', 'turn'],
-    turnType: 'positive-safe-integer',
-    sameTurnReuse: true,
-    crossTurnRefresh: true,
+    nativeSignature: 'prepareCall(provider, model, signal)',
     preparedModelInfoAndStreamSameRevision: true,
-    backgroundRefreshCannotReplaceFrozenTurnSnapshot: true,
-    generationDriftInsideTurn: 'fail-closed',
-    missingContextForTurnScopedDispatch: 'fail-closed',
+    optionalLegacyTurnContext: 'not supplied by the native 0.2 host',
   });
   assert.equal(manifest.dynamicAccountCatalog.requireHeaderBodyModelMatch, true);
   assert.equal(manifest.dynamicAccountCatalog.catalogRequestCarriesModelOverride, false);
@@ -122,13 +117,15 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
     maxSide: IMAGE_MAX_SIDE,
     minPixels: IMAGE_MIN_PIXELS,
     minSide: IMAGE_MIN_SIDE,
-    allowedImageRoles: ['user', 'nested-tool-result'],
+    allowedImageRoles: ['user', 'tool', 'legacy-nested-tool-result'],
     responsesImageType: 'input_image',
     chatImageType: 'image_url',
     responsesToolResultImageEncoding: 'function_call_output.output',
     chatToolResultImageEncoding: 'role-tool-content',
     silentOmission: false,
-    inputPreparationOwner: 'DSH host logged plugin notice',
+    inputPreparationOwner: 'provider via native attachment readImageRequest; no host patch',
+    requestTargetFields: ['width', 'height', 'maxBytes'],
+    offloadedImages: 'native textual placeholder; original attachment retained',
     maxRequestBodyBytes: 40000000,
     requestBudgetKind: 'local conservative serialized UTF-8 budget, not official limit',
   });
@@ -149,7 +146,7 @@ test('hardening manifest matches runtime constants and canonical file set', asyn
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   assert.deepEqual(manifest.hostPeerVersions, pkg.peerDependencies);
   assert.deepEqual(manifest.hostPeerVersions, {
-    ...pkg.devDependencies,
+    ...Object.fromEntries(Object.entries(pkg.devDependencies).filter(([name])=>name!=='playwright')),
     '@deepseek-ai/dsh-llm': pkg.peerDependencies['@deepseek-ai/dsh-llm'],
   });
   assert.equal(manifest.model, undefined);

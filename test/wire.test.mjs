@@ -35,6 +35,29 @@ function prepared(...ids) {
   }]));
 }
 
+test('V4 first-class tool messages retain call identity, text, errors and images in both protocols', () => {
+  const selected = options({ messages: [
+    { role: 'assistant', content: [{ type: 'tool-call', id: 'native-call', name: 'inspect', arguments: '{}' }] },
+    { role: 'tool', toolCallId: 'native-call', source: { kind: 'tool', callId: 'native-call' },
+      isError: true, content: [{ type: 'text', text: 'fixture result' }, image('native-image')] },
+  ] });
+  const images = prepared('native-image');
+  const responses = serializeResponsesRequest(selected, {}, images);
+  const chat = serializeChatRequest(selected, {}, images);
+  const result = responses.input.find(item => item.type === 'function_call_output');
+  assert.equal(result.call_id, 'native-call');
+  assert.match(result.output[0].text, /tool error.*fixture result/);
+  assert.equal(result.output[1].image_url, 'data:image/png;base64,AQID');
+  const tool = chat.messages.find(item => item.role === 'tool');
+  assert.equal(tool.tool_call_id, 'native-call');
+  assert.match(tool.content[0].text, /tool error.*fixture result/);
+  assert.equal(tool.content[1].image_url.url, 'data:image/png;base64,AQID');
+  assert.equal(chat.messages.some(item => item.role === 'user'), false);
+  selected.messages[1].toolCallId = '';
+  assert.throws(() => serializeChatRequest(selected, {}, images));
+  assert.throws(() => serializeResponsesRequest(selected, {}, images));
+});
+
 test('Responses and chat serializers preserve high reasoning and tool round trips', () => {
   const responses = serializeResponsesRequest(options(), {});
   assert.deepEqual(responses.reasoning, { effort: 'high' });

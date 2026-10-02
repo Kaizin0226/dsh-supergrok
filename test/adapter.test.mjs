@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { GrokAdapter } from '../lib/adapter.js';
+import { Context } from '@deepseek-ai/cordis';
+import LlmRuntime from '@deepseek-ai/dsh-llm';
 
 function settings(overrides = {}) {
   return () => ({
@@ -41,60 +43,33 @@ function seedCatalog(adapter, models = [entitled()]) {
   };
 }
 
-test('the session request guard rejects before a model POST and receives no private request content', async () => {
-  let posts = 0;
-  const adapter = new GrokAdapter(settings(), { getAccessToken: async () => 'fixture' }, undefined, {
-    beforeModelRequest(request) {
-      assert.deepEqual(Object.keys(request).sort(), ['model', 'provider', 'purpose', 'reasoningEffort', 'sessionId', 'signal']);
-      assert.equal(request.sessionId, 'guarded-session');
-      assert.equal(request.purpose, 'compaction');
-      throw new Error('SYNTHETIC_POLICY_REFUSAL');
+test('native LlmRuntime dispatches V4 tool history and offloaded images without host patches', async () => {
+  const ctx = new Context();
+  const payloads = [];
+  const adapter = new GrokAdapter(settings(), { async getAccessToken() { return 'fixture-only'; } }, undefined, {
+    fetch: async (_url, init, purpose) => {
+      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current', ['high'], {inputModalities:['text','image']})]);
+      payloads.push(JSON.parse(init.body)); return successResponse();
     },
-    fetch: async (_url, _init, purpose) => {
-      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
-      posts++; return successResponse();
-    },
+    resolveAttachments: () => ({ async readImageRequest() { throw new Error('offloaded bytes must not be read'); } }),
   });
-  await assert.rejects(drain(adapter.stream(generateOptions(undefined, { sessionId: 'guarded-session', purpose: 'compaction' }))), /SYNTHETIC_POLICY_REFUSAL/);
-  assert.equal(posts, 0);
-});
-
-test('guarded authentication rejection performs one model POST without refresh or replay', async () => {
-  let posts = 0;
-  let refreshes = 0;
-  let guardCalls = 0;
-  const adapter = new GrokAdapter(settings(), { getAccessToken: async rejected => { if (rejected) refreshes++; return 'fixture'; } }, undefined, {
-    beforeModelRequest() { guardCalls++; return { disableAutomaticRetries: true }; },
-    fetch: async (_url, _init, purpose) => {
-      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
-      posts++; return new Response(JSON.stringify({ error: { message: 'synthetic rejection' } }), { status: 401 });
-    },
-  });
-  await assert.rejects(drain(adapter.stream(generateOptions(undefined, { sessionId: 'guarded-session' }))));
-  assert.equal(guardCalls, 1);
-  assert.equal(posts, 1);
-  assert.equal(refreshes, 0);
-});
-
-test('cancellation while awaiting the request policy prevents model dispatch', async () => {
-  const controller = new AbortController();
-  let calls = 0;
-  let posts = 0;
-  const adapter = new GrokAdapter(settings(), { getAccessToken: async () => 'fixture' }, undefined, {
-    async beforeModelRequest(request) {
-      calls++;
-      assert.equal(Object.isFrozen(request), true);
-      await Promise.resolve();
-      controller.abort(new Error('synthetic cancellation'));
-    },
-    fetch: async (_url, _init, purpose) => {
-      if (purpose === 'catalog') return liveCatalog([catalogModel('grok-live-current')]);
-      posts++; return successResponse();
-    },
-  });
-  await assert.rejects(drain(adapter.stream(generateOptions(controller.signal))), /synthetic cancellation/);
-  assert.equal(calls, 1);
-  assert.equal(posts, 0);
+  try {
+    await ctx.plugin(LlmRuntime);
+    ctx.llm.registerAdapter(['grok-oauth'], adapter);
+    const signal = new AbortController().signal;
+    const call = await ctx.llm.prepareCall({provider:'grok-oauth',model:'grok-live-current',reasoningEffort:'high'},signal);
+    const messages = [
+      {role:'user',content:[{type:'image',offloaded:true,attachment:{attachmentId:'fixture-image',mediaType:'image/png',bytes:3,width:32,height:32}}]},
+      {role:'assistant',source:{kind:'model',provider:'grok-oauth',model:'grok-live-current'},content:[{type:'tool-call',id:'native-call',name:'inspect',arguments:'{}'}]},
+      {role:'tool',toolCallId:'native-call',source:{kind:'tool',callId:'native-call'},content:[{type:'text',text:'synthetic tool result'}]},
+    ];
+    await drain(call.stream({...call.config,messages,signal}));
+    assert.equal(payloads.length,1);
+    assert.match(JSON.stringify(payloads[0]), /image omitted to fit request image limits/);
+    assert.doesNotMatch(JSON.stringify(payloads[0]), /data:image/);
+    assert.equal(payloads[0].messages.find(item=>item.role==='tool').tool_call_id,'native-call');
+    assert.throws(()=>call.stream({...call.config,messages,signal}),{code:'INVALID_PREPARED_CALL'});
+  } finally { await ctx.fiber.dispose(); }
 });
 
 test('final UTF-8 request budget includes complete serialized messages and rejects before token or POST', async () => {
@@ -532,7 +507,7 @@ test('image inference uses DSH readImageRequest before dispatch and serializes t
   assert.equal(reads.length, 1);
   assert.equal(reads[0].seenRef, ref);
   assert.equal(reads[0].seenSignal, signal);
-  assert.deepEqual(reads[0].policy, { maxPixels: 1024, maxBytes: 1_500_000 });
+  assert.deepEqual(reads[0].policy, { width: 32, height: 32, maxBytes: 1_500_000 });
   assert.match(inference.url, /\/chat\/completions$/);
   const body = JSON.parse(inference.init.body);
   assert.equal(body.messages[0].content[1].image_url.url, 'data:image/png;base64,AQID');

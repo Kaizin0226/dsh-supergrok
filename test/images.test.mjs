@@ -59,8 +59,8 @@ test('durable images are projected once in first-appearance order with fixed Gro
   ], attachments, signal);
 
   assert.deepEqual(calls.map((call) => call.ref.attachmentId), ['sha256-wide', 'sha256-square']);
-  assert.deepEqual(calls[0].policy, { maxPixels: 1_000_000, maxBytes: IMAGE_MAX_ENCODED_BYTES });
-  assert.deepEqual(calls[1].policy, { maxPixels: 1_000_000, maxBytes: IMAGE_MAX_ENCODED_BYTES });
+  assert.deepEqual(calls[0].policy, { width: 2000, height: 500, maxBytes: IMAGE_MAX_ENCODED_BYTES });
+  assert.deepEqual(calls[1].policy, { width: 1000, height: 1000, maxBytes: IMAGE_MAX_ENCODED_BYTES });
   assert.ok(calls.every((call) => call.signal === signal));
   assert.equal(requestImageDataUrl(prepared, wide), 'data:image/png;base64,AQID');
   assert.equal(requestImageDataUrl(prepared, square), 'data:image/png;base64,AQID');
@@ -129,7 +129,7 @@ test('attachment failures expose neither local paths nor image data', async () =
   try {
     await prepareRequestImages(
       [{ role: 'user', content: [{ type: 'image', attachment: ref }] }],
-      { async readImageRequest() { throw new Error('fixture\\private\\image.png data:image/png;base64,SECRET'); } },
+      { async readImageRequest() { throw new Error('/synthetic/private/image.png data:image/png;base64,SECRET'); } },
     );
   } catch (error) {
     caught = error;

@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeUsage,UsageService} from '../lib/usage.js';
 import {assertAllowedOutboundUrl} from '../lib/net.js';
-const good={config:{creditUsagePercent:76,currentPeriod:{type:'USAGE_PERIOD_TYPE_WEEKLY',end:'2026-09-11T22:06:36.320172+00:00'}}};
-test('live weekly response and time zone normalization',()=>{
- const v=normalizeUsage(good);assert.equal(v.usedPercent,76);assert.equal(v.remainingPercent,24);assert.equal(v.period,'weekly');assert.equal(v.resetAt,'2026-09-11T22:06:36.320Z');
+const good={config:{creditUsagePercent:37,currentPeriod:{type:'USAGE_PERIOD_TYPE_WEEKLY',end:'2030-01-02T03:04:05.678123+00:00'}}};
+test('synthetic weekly response and time zone normalization',()=>{
+ const v=normalizeUsage(good);assert.equal(v.usedPercent,37);assert.equal(v.remainingPercent,63);assert.equal(v.period,'weekly');assert.equal(v.resetAt,'2030-01-02T03:04:05.678Z');
 });
 test('zero, full, missing and invalid new values never become false zero',()=>{
  for(const p of [0,100])assert.equal(normalizeUsage({config:{creditUsagePercent:p}}).usedPercent,p);
@@ -23,7 +23,7 @@ test('single flight, TTL, failures, signout and account isolation',async()=>{
  let time=100000, calls=0, bad=false, signed=true, token='first';
  const oauth={uiStatus:async()=>({oauthStatus:signed?'signed-in':'signed-out'}),getAccessToken:async()=>token};
  const service=new UsageService(oauth,{now:()=>time,fetchImpl:async()=>{calls++;if(bad)throw Error('network');return new Response(JSON.stringify(good));}});
- const results=await Promise.all([service.get(),service.get()]);assert.equal(calls,1);assert.equal(results[0].snapshot.usedPercent,76);
+ const results=await Promise.all([service.get(),service.get()]);assert.equal(calls,1);assert.equal(results[0].snapshot.usedPercent,37);
  await service.get();assert.equal(calls,1);
  time+=60001;bad=true;assert.equal((await service.get()).status,'stale');
  token='second';assert.equal((await service.get()).snapshot,null);

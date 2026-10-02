@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   CLIENT_IDENTIFIER,
   CLIENT_VERSION,
+  PLUGIN_VERSION,
+  PROTOCOL_SNAPSHOT_VERSION,
   LIVE_CATALOG_CAPABILITY_PROVENANCE,
   PROVIDER,
 } from '../lib/constants.js';
@@ -44,6 +46,9 @@ test('protocol headers carry the exact safe selected model and truthful client i
   assert.equal(headers['x-grok-client-mode'], 'headless');
   assert.equal(headers['x-grok-client-identifier'], CLIENT_IDENTIFIER);
   assert.equal(headers['x-grok-client-version'], CLIENT_VERSION);
+  assert.equal(CLIENT_VERSION, PROTOCOL_SNAPSHOT_VERSION);
+  assert.notEqual(CLIENT_VERSION, PLUGIN_VERSION);
+  assert.equal(CLIENT_IDENTIFIER, 'dsh-supergrok-oauth-hardened');
   assert.equal(headers['x-grok-model-override'], 'grok-4.7-fast');
   assert.equal(headers['x-grok-req-id'], 'req-1');
   assert.equal(headers['x-grok-session-id'], 'session-1');

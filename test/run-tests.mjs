@@ -2,10 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-process.env.XAI_API_KEY = '';
-for (const key of Object.keys(process.env)) {
-  if (/API_KEY|TOKEN|SECRET|AUTHORIZATION/i.test(key)) delete process.env[key];
-}
+for (const key of Object.keys(process.env)) if (/API_KEY|TOKEN|SECRET|PASSWORD|AUTHORIZATION|^DSH_HOME$|^DSH_SUPERGROK_/i.test(key)) delete process.env[key];
 process.env.XAI_API_KEY = '';
 const childEnvironment = { ...process.env };
 childEnvironment.XAI_API_KEY = '';
@@ -24,14 +21,14 @@ const files = process.argv[2] === 'smoke'
       join(testDirectory, 'local-security.test.mjs'),
       join(testDirectory, 'live-canary.test.mjs'),
       join(testDirectory, 'net.test.mjs'),
-      join(testDirectory, 'proxy-config.test.mjs'),
-      join(testDirectory, 'safety-rules.test.mjs'),
       join(testDirectory, 'oauth.test.mjs'),
       join(testDirectory, 'protocol.test.mjs'),
       join(testDirectory, 'smoke.test.mjs'),
       join(testDirectory, 'static-security.test.mjs'),
       join(testDirectory, 'wire.test.mjs'),
       join(testDirectory, 'usage.test.mjs'),
+      join(testDirectory, 'proxy-config.test.mjs'),
+      join(testDirectory, 'safety-rules.test.mjs'),
     ];
 const result = spawnSync(process.execPath, ['--require', join(testDirectory, 'offline-guard.cjs'), '--test', '--test-concurrency=1', ...files], {
   cwd: join(testDirectory, '..'),

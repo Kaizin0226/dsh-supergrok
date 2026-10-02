@@ -10,7 +10,7 @@
   "schemaVersion": 3,
   "provider": "grok-oauth",
   "permission": "read-only",
-  "pluginVersion": "0.8.0-hardened.1",
+  "pluginVersion": "0.9.0-hardened.1",
   "selection": {
     "source": "authenticated-live-account-catalog",
     "fixedModel": false,
@@ -28,7 +28,8 @@
     "catalogRpc": "session.modelCatalog",
     "liveCatalogReadOnly": true,
     "editableFields": [
-      "modelsRefreshSeconds"
+      "modelsRefreshSeconds",
+      "proxyUrl"
     ],
     "otherProviderFailuresExcluded": true,
     "polling": false
@@ -53,20 +54,12 @@
     "serveStaleOnRefreshFailure": false,
     "notifyOnFingerprintChange": true,
     "revalidateBeforeTurn": true,
-    "turnScopedPreparePreflight": "force-fresh-on-new-turn",
-    "forceFreshCatalogPerInference": false,
+    "turnScopedPreparePreflight": "native-call-preflight",
+    "forceFreshCatalogPerInference": true,
     "preparedDispatchContext": {
-      "fields": [
-        "sessionId",
-        "turn"
-      ],
-      "turnType": "positive-safe-integer",
-      "sameTurnReuse": true,
-      "crossTurnRefresh": true,
+      "nativeSignature": "prepareCall(provider, model, signal)",
       "preparedModelInfoAndStreamSameRevision": true,
-      "backgroundRefreshCannotReplaceFrozenTurnSnapshot": true,
-      "generationDriftInsideTurn": "fail-closed",
-      "missingContextForTurnScopedDispatch": "fail-closed"
+      "optionalLegacyTurnContext": "not supplied by the native 0.2 host"
     },
     "requireHeaderBodyModelMatch": true,
     "catalogRequestCarriesModelOverride": false,
@@ -151,16 +144,23 @@
     "minSide": 8,
     "allowedImageRoles": [
       "user",
-      "nested-tool-result"
+      "tool",
+      "legacy-nested-tool-result"
     ],
     "responsesImageType": "input_image",
     "chatImageType": "image_url",
     "responsesToolResultImageEncoding": "function_call_output.output",
     "chatToolResultImageEncoding": "role-tool-content",
     "silentOmission": false,
-    "inputPreparationOwner": "DSH host logged plugin notice",
+    "inputPreparationOwner": "provider via native attachment readImageRequest; no host patch",
     "maxRequestBodyBytes": 40000000,
-    "requestBudgetKind": "local conservative serialized UTF-8 budget, not official limit"
+    "requestBudgetKind": "local conservative serialized UTF-8 budget, not official limit",
+    "requestTargetFields": [
+      "width",
+      "height",
+      "maxBytes"
+    ],
+    "offloadedImages": "native textual placeholder; original attachment retained"
   },
   "allowedOrigins": [
     "https://auth.x.ai",
@@ -170,14 +170,14 @@
   "acceptanceEmptyToolCatalogGuard": true,
   "acceptanceOAuthNetworkDisabled": true,
   "acceptanceSingleInferenceLatch": true,
-  "protocolProvenance": "xai-org/grok-build@bc7f02eddd3d84085849dc19ed216f11c23b0571",
+  "protocolProvenance": "xai-org/grok-build@2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
   "hostPeerVersions": {
-    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
-    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
-    "@deepseek-ai/schemastery": "3.18.2"
+    "@deepseek-ai/dsh-attachment": "0.2.0-rc.2",
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-credentials": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-settings": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4"
   },
   "canonicalRuntimeTree": {
     "algorithm": "sha256",
@@ -195,24 +195,25 @@
     "rejectMissing": true,
     "rejectSymlinks": true
   },
-  "proxyPolicy": {
-    "setting": "proxyUrl",
+  "wireClientVersion": {
+    "value": "1.0.45",
+    "semantics": "reviewed-grok-protocol-compatibility",
+    "pluginVersionSeparate": true,
+    "clientIdentifier": "dsh-supergrok-oauth-hardened",
+    "automaticVersionNegotiation": false
+  },
+  "proxy": {
+    "configuration": "proxyUrl",
     "required": true,
     "protocol": "http:",
     "hosts": [
       "127.0.0.1",
       "[::1]"
     ],
-    "credentials": false,
+    "credentialsAllowed": false,
+    "systemProxy": false,
     "directFallback": false,
-    "environmentDiscovery": false,
-    "changeRequiresRestart": true
-  },
-  "requestBoundary": {
-    "protocolVersion": 1,
-    "hook": "grok-oauth/before-model-request",
-    "everyModelPost": true,
-    "refusalPreventsInference": true,
-    "supportsDisableAutomaticRetries": true
+    "sharedDispatcher": true,
+    "reloadRequiredOnChange": true
   }
 }

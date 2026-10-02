@@ -1,7 +1,7 @@
 {
   "name": "dsh-llm-grok-oauth",
   "description": "Pinned and hardened dynamic live-catalog SuperGrok OAuth provider for DeepSeek Harness",
-  "version": "0.8.0-hardened.1",
+  "version": "0.9.0-hardened.1",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -34,7 +34,16 @@
     "npm-shrinkwrap.json",
     "NOTICE",
     "THIRD-PARTY-NOTICES.md",
-    "licenses/*.txt"
+    "licenses/*.txt",
+    "UPSTREAM-PROVENANCE.md",
+    "components.lock.json",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "docs/*.md",
+    "presets/grok-optimized/persona-prefix.md",
+    "presets/grok-optimized/SOURCE-PROVENANCE.md",
+    "presets/grok-optimized/reference-lock.json",
+    "presets/grok-optimized/upstream-standard.patch.yml"
   ],
   "dsh": {
     "client": {
@@ -61,7 +70,8 @@
     },
     "marketplace": {
       "profiles": [
-        "web"
+        "web",
+        "headless"
       ],
       "requiresBuildApproval": false,
       "requiresRestart": true,
@@ -69,35 +79,32 @@
     }
   },
   "scripts": {
-    "test": "npm run test:provider && npm run test:preset && npm run test:contracts && npm run test:deployment",
+    "test": "npm run test:provider && npm run test:preset && npm run test:deployment",
     "test:provider": "node test/run-tests.mjs",
     "test:smoke": "node test/run-tests.mjs smoke",
     "test:preset": "node scripts/derive-grok-preset.mjs --check && node presets/grok-optimized/test-preset.mjs",
-    "test:contracts": "node scripts/test-contracts.mjs",
-    "test:deployment": "powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTreeSnapshot.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File deployment/windows/Test-DeploymentTransactions.ps1",
+    "test:deployment": "node scripts/check-native-package.mjs",
     "safety": "node scripts/check-repository-safety.mjs",
     "history-safety": "node scripts/check-git-history.mjs",
     "canonical-hash": "node scripts/canonical-tree-hash.mjs",
     "source-hash": "node scripts/source-tree-hash.mjs",
     "pack:check": "npm pack --dry-run",
-    "verify": "npm run safety && npm run history-safety && npm test && npm run canonical-hash && npm run source-hash && npm run pack:check",
-    "build:dsh": "node scripts/build-dsh.mjs",
+    "verify": "npm run safety && npm run history-safety && npm test && npm run test:docs && npm run pack:check",
     "build:suite": "node scripts/build-suite.mjs",
     "test:installed": "node scripts/test-installed.mjs",
-    "derive:preset": "node scripts/derive-grok-preset.mjs",
-    "test:sdk": "node scripts/test-sdk.mjs"
+    "test:docs": "node scripts/check-docs.mjs"
   },
   "license": "(MIT AND Apache-2.0)",
   "dependencies": {
-    "undici": "7.29.0"
+    "undici": "7.30.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
-    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
-    "@deepseek-ai/schemastery": "3.18.2"
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-attachment": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-credentials": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-settings": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-attachment": {
@@ -123,11 +130,12 @@
     "node": ">=24 <25"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "0.1.5-rc.2",
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-credentials": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-settings": "0.1.5-rc.2",
-    "@deepseek-ai/schemastery": "3.18.2"
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-attachment": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-credentials": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-settings": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4",
+    "playwright": "1.63.0"
   }
 }

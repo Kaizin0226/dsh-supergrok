@@ -59,7 +59,7 @@ test('JSON body reader cancels on timeout, overflow, and parse failure', async (
 test('one dispatcher is reused and redirects are rejected', async () => {
   const dispatcher = { marker: 'pinned' };
   const calls = [];
-  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:7897',
+  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:1',
     runtimeFactory: async () => ({
       dispatcher,
       fetchImpl: async (url, init) => {
@@ -84,7 +84,7 @@ test('one dispatcher is reused and redirects are rejected', async () => {
 
 test('proxy failure has no direct/curl retry and does not expose secret form values', async () => {
   let attempts = 0;
-  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:7897',
+  const transport = createPinnedTransport({ proxyUrl: 'http://127.0.0.1:1',
     runtimeFactory: async () => ({
       dispatcher: {},
       fetchImpl: async () => {
@@ -117,7 +117,7 @@ test('OAuth form transport sends truthful fixed client identity headers', async 
   await postFormJson('/oauth2/device/code', { client_id: 'public', referrer: 'dsh-supergrok-oauth-hardened' }, 1000, transport);
   assert.equal(seen.purpose, 'oauth');
   assert.equal(seen.init.headers['x-grok-client-surface'], 'ui');
-  assert.equal(seen.init.headers['x-grok-client-version'], '0.8.0-hardened.1');
+  assert.equal(seen.init.headers['x-grok-client-version'], '1.0.45');
   assert.equal(seen.init.headers['x-grok-client-identifier'], 'dsh-supergrok-oauth-hardened');
   assert.equal(
     seen.init.headers['user-agent'],

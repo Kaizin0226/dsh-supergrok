@@ -1,8 +1,4 @@
-# dsh-llm-grok-oauth bundle patch: mount the Grok (xAI) subscription OAuth
-# provider. Config lives in the `llm-grok-oauth:` user-settings section; this row
-# carries only identity so settings stay the single source of truth.
+# Native 0.2 Config forms are derived from this entry and its volatile schema.
 - insert:
     - id: llm-grok-oauth
       name: dsh-llm-grok-oauth
-
-
