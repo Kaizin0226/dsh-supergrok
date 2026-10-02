@@ -2,48 +2,38 @@
   "schemaVersion": 1,
   "dsh": {
     "package": "@deepseek-ai/dsh",
-    "version": "0.1.5-rc.2",
-    "upstreamTag": "dsh-v0.1.5-rc.2",
-    "upstreamCommit": "fb2c4b9e698e30edb738bca4cf0618587db7d203",
-    "commit": "fb2c4b9e698e30edb738bca4cf0618587db7d203",
-    "distributionVersion": "0.1.5-rc.2.grok.3"
+    "version": "0.2.0-rc.2",
+    "upstreamTag": "dsh-v0.2.0-rc.2",
+    "source": "official npm distribution pinned by dependency locks; upstream standard retained for derivation",
+    "upstreamCommit": "639ed015397290b3745d163aafe02ffee4aa3f84"
   },
   "distribution": {
-    "version": "0.1.5-rc.2.grok.1",
-    "patchedPackages": {
-      "@deepseek-ai/dsh-llm": "0.1.5-rc.2.grok.1",
-      "@deepseek-ai/dsh-agent-loop": "0.1.5-rc.2.grok.1",
-      "@deepseek-ai/dsh-api-session-controller": "0.1.5-rc.2.grok.1",
-      "@deepseek-ai/dsh-agent-presets": "0.1.5-rc.2.grok.1"
+    "version": "0.2.0-rc.2",
+    "patchedPackages": {},
+    "suiteVersion": "0.9.0",
+    "dependencyOverrides": {
+      "fflate": "0.8.3"
     }
   },
   "provider": {
     "package": "dsh-llm-grok-oauth",
-    "version": "0.8.0-hardened.1",
+    "version": "0.9.0-hardened.1",
     "upstreamRepository": "https://github.com/wangyaominde/dsh-llm-grok-oauth.git",
     "upstreamCommit": "108cc76224d1845b5c88602f7c7a24bb1ced0497",
     "maintenanceSource": "lib/ is the maintained JavaScript source for provider input preparation and account usage support"
   },
   "grokBuildProtocolReference": {
     "repository": "https://github.com/xai-org/grok-build.git",
-    "commit": "bc7f02eddd3d84085849dc19ed216f11c23b0571",
-    "packageVersion": "1.0.12"
+    "commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+    "packageVersion": "1.0.45"
   },
   "preset": {
     "id": "grok-optimized",
-    "version": "0.9.1",
+    "version": "1.1.0",
     "designReferences": "presets/grok-optimized/reference-lock.json"
   },
-  "xaiDshContracts": {
-    "version": "0.1.0"
-  },
-  "suite": {
-    "version": "0.8.0",
-    "release": "suite-v0.8.0-preview.1"
-  },
-  "extensions": {
-    "dsh-attachment-history": "1.2.0",
-    "dsh-tool-attachment-history": "1.2.0",
-    "dsh-grok-work-state-context": "1.2.0"
+  "toolchain": {
+    "nodeMajor": 24,
+    "pnpm": "11.28.3"
   }
 }

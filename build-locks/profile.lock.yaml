@@ -1,0 +1,62 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      dsh-llm-grok-oauth:
+        specifier: file:vendor/dsh-llm-grok-oauth-0.9.0-hardened.1.tgz
+        version: file:vendor/dsh-llm-grok-oauth-0.9.0-hardened.1.tgz
+      grok-optimized-preset:
+        specifier: file:vendor/grok-optimized-preset-1.1.0.tgz
+        version: file:vendor/grok-optimized-preset-1.1.0.tgz
+
+packages:
+
+  dsh-llm-grok-oauth@file:vendor/dsh-llm-grok-oauth-0.9.0-hardened.1.tgz:
+    resolution: {integrity: sha512-aMIbONWtkoejGSNTv/baGUzGmsPGeqn0fa698a3rZu1tVa55etGK+61QvkxAO2RcZOe/XimVkd1EpcpfuDN8Kw==, tarball: file:vendor/dsh-llm-grok-oauth-0.9.0-hardened.1.tgz}
+    version: 0.9.0-hardened.1
+    engines: {node: '>=24 <25'}
+    peerDependencies:
+      '@deepseek-ai/cordis': 4.0.4
+      '@deepseek-ai/dsh-attachment': 0.2.0-rc.2
+      '@deepseek-ai/dsh-credentials': 0.2.0-rc.2
+      '@deepseek-ai/dsh-llm': 0.2.0-rc.2
+      '@deepseek-ai/dsh-settings': 0.2.0-rc.2
+      '@deepseek-ai/schemastery': 3.18.4
+    peerDependenciesMeta:
+      '@deepseek-ai/cordis':
+        optional: true
+      '@deepseek-ai/dsh-attachment':
+        optional: true
+      '@deepseek-ai/dsh-credentials':
+        optional: true
+      '@deepseek-ai/dsh-llm':
+        optional: true
+      '@deepseek-ai/dsh-settings':
+        optional: true
+      '@deepseek-ai/schemastery':
+        optional: true
+
+  grok-optimized-preset@file:vendor/grok-optimized-preset-1.1.0.tgz:
+    resolution: {integrity: sha512-ge3SQ0814GfDRESHHgcpc+RcbzKrXIY0PUMA3sFJI8lRu1zx2NlisbBmn4lAnlh3oIAvCmloEYQLVPC4XnY/8g==, tarball: file:vendor/grok-optimized-preset-1.1.0.tgz}
+    version: 1.1.0
+    engines: {node: '>=24 <25'}
+
+  undici@7.30.0:
+    resolution: {integrity: sha512-dkrQXeHSaoamnItlYbmzG0wFYrM0ZwDxCIg0A7aKjTyyhh9svRzCNFEzV+Vm05/yehjCzjDZ31KXfGEjYSztDQ==}
+    engines: {node: '>=20.18.1'}
+
+snapshots:
+
+  dsh-llm-grok-oauth@file:vendor/dsh-llm-grok-oauth-0.9.0-hardened.1.tgz:
+    dependencies:
+      undici: 7.30.0
+
+  grok-optimized-preset@file:vendor/grok-optimized-preset-1.1.0.tgz: {}
+
+  undici@7.30.0: {}
