@@ -13,6 +13,9 @@ jobs:
   verify:
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/dsh-supergrok-native/browsers
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -26,18 +29,20 @@ jobs:
       - run: npm run verify
       - name: Verify reproducible preset derivation
         run: node scripts/derive-grok-preset.mjs --check
-      - name: Build pinned DSH core from clean source
+      - name: Pack native plugins and locked official runtime
         shell: pwsh
-        run: node scripts/build-dsh.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-build"
-      - name: Test core input preparation and lifecycle
+        run: node scripts/build-suite.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-native"
+      - name: Review current dependency advisories
         shell: pwsh
-        run: node scripts/build-dsh.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-build" --phase test
-      - name: Build and test extensions and locked distribution
+        run: |
+          npm audit --audit-level=low
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm audit --omit=dev --audit-level=low
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm audit --prefix "$env:RUNNER_TEMP/dsh-supergrok-native/bundle" --audit-level=low
+          exit $LASTEXITCODE
+      - name: Install isolated test browser
+        run: node node_modules/playwright/cli.js install chromium
+      - name: Verify native Web and headless compositions and rollback
         shell: pwsh
-        run: node scripts/build-suite.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-build"
-      - name: Verify prepared-input SDK replay
-        shell: pwsh
-        run: node scripts/test-sdk.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-build"
-      - name: Verify installed web and headless compositions and rollback
-        shell: pwsh
-        run: node scripts/test-installed.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-build"
+        run: node scripts/test-installed.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-native"

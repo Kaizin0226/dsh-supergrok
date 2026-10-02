@@ -2,57 +2,40 @@
 
 ## English
 
-Contributions are scoped to SuperGrok OAuth access in DSH and the dedicated
-Grok-optimized mode. Core patches, extensions, build/install tooling and tests
-are supporting implementation for those capabilities.
+Contributions cover the SuperGrok provider, Grok-optimized preset and their native
+packaging, installation and synthetic verification. Start from current main;
+hardened/main mirrors the same release line. Do not merge old private histories.
 
-This is a developer preview for Windows and Node.js 24. Start from a fresh clone
-of `main`; do not merge commits from an older, rewritten-history checkout.
-`hardened/main` is a compatibility mirror, not a separate feature line. Keep
-patches focused and describe observable behavior and relevant verification in
-the PR. No CLA is required; preserve attribution, use MIT for original work and
-retain Apache-2.0 terms for applicable derivatives.
+Use Windows and Node.js 24. Follow [installation](docs/INSTALLATION.md), run
+`npm ci --ignore-scripts` and `npm run verify`. Provider/preset/installation changes
+also require clean packaging and relevant installed acceptance.
+Tests must use synthetic data, remove real credentials and avoid live service calls.
+`derive-grok-preset.mjs --check` is read-only; regenerate only during an intentional
+source change and review the result. `build-suite.mjs --update-locks` requires
+dependency review and new installation validation.
 
-Follow the [build/install guide](deployment/windows/README.md). Run
-`npm ci --ignore-scripts` and `npm run verify`. For core, preset, extension or
-installer changes, also build the pinned DSH source and suite and run installed
-composition tests. Remove real credentials from tests, use synthetic fixtures
-and never add live-service calls to CI. Use your own GitHub noreply address if
-you do not want a personal email in public commit history.
-
-Maintain English and Simplified Chinese documentation with matching commands,
-versions and limitations. Keep both README languages in one README.md with
-language anchors. Public commits, PRs and documentation should describe durable,
-reader-relevant changes and completed verification without internal progress
-updates or drafting placeholders. Preserve original license texts. Update provenance
-and locks when their inputs change; do not suppress mismatches. The suite builder's
-explicit `--update-locks` option regenerates the reviewed npm graphs for a prepared
-build; ordinary builds preserve registry resolutions and refresh only local
-tarball integrity. Review dependency changes and repeat the applicable build and
-installation checks after regeneration. Use issues for
-minimal synthetic reproductions and focused feature proposals, without real
-logs, settings, conversations or account screenshots. Follow [SECURITY.md](SECURITY.md)
-for vulnerabilities. Discuss large features before investing in a large patch.
+Keep changes focused; explain observable behavior and completed checks.
+Documents are bilingual, with both README languages in one file. Public commits,
+PRs and releases must be self-contained and formal, without drafting/progress
+placeholders. Preserve authors and licenses; original work uses MIT, applicable
+derivatives retain Apache-2.0. Use your own GitHub noreply address if desired.
+Issues should contain versions, a concise error and synthetic reproduction;
+vulnerabilities use [private reporting](SECURITY.md), not public issues.
 Maintenance is best-effort; untested combinations are not supported.
 
 ## 中文
 
-贡献范围仅限 SuperGrok OAuth 接入 DSH 和专属 Grok 优化模式；核心补丁、扩展、
-构建安装工具及测试均须服务于这两项功能。
+贡献范围为 SuperGrok provider、Grok 优化预设，以及原生打包、安装和合成验证。
+从当前 main 开始，hardened/main 镜像同一发行线，不合并旧私有历史。
 
-这是面向 Windows 与 Node.js 24 的开发者预览版。从 `main` 全新克隆，不合并历史改写前的旧提交。
-`hardened/main` 是兼容镜像，不是另一条功能开发线。保持补丁聚焦，在 PR 中说明可观察行为及相关验证。
-不要求 CLA；保留署名，原创采用 MIT，适用衍生内容继续遵守 Apache-2.0。
+使用 Windows 和 Node.js 24，按安装指南执行 verify；provider、预设或安装改动
+须重新干净打包并完成相关组合验收。只用合成数据，清除真实凭据，不调用线上服务。
+派生脚本 `--check` 为只读；仅在有意修改源码时生成并审阅结果。
+构建 `--update-locks` 须核查依赖并重做安装验证。
 
-遵循[构建安装指南](deployment/windows/README.md)，运行 `npm ci --ignore-scripts` 和 `npm run verify`。
-改动核心、预设、扩展或安装工具时，还需构建固定 DSH 源码及配套组合，并运行安装组合测试。
-测试清除真实凭据并使用合成数据，不在 CI 调用真实服务。若不想公开个人邮箱，
-请为自己的提交使用自己的 GitHub noreply 邮箱。
-
-文档保持中英双语，命令、版本和限制相互对应；README 两种语言放在同一 README.md 中，以锚点跳转，许可证保留原文。
-公开提交、PR 及文档只记录对读者有长期价值的变更和已完成验证，不夹带内部进度或起草占位内容。
-来源与锁定输入变化时同步更新声明，不屏蔽不一致。配套构建器的显式 `--update-locks` 选项
-可在已准备的构建目录重新生成 npm 依赖锁；普通构建保留注册表解析结果，仅刷新本地产物校验值。
-重新生成后审阅依赖变化并完成相应构建和安装验证。Issue 仅提供最小合成复现或聚焦功能建议，
-不附真实日志、设置、聊天或账户截图。漏洞按 [SECURITY.md](SECURITY.md) 私密反馈。
-大功能先讨论再投入；维护尽力而为，不承诺未经验证组合的支持。
+变更保持聚焦，说明可观察行为和已完成检查。文档中英双语，README 同页。
+公开提交、PR 和 Release 须正式、自足，不含起草或进度占位。
+保留作者与许可，自有新增 MIT，适用衍生材料保留 Apache-2.0。
+可使用自己的 GitHub noreply 邮箱。Issue 只提供版本、简短错误和合成复现；
+漏洞私密报告，不附凭据、真实日志、账户截图或聊天。
+维护尽力而为，不承诺未经验证组合。

@@ -1,60 +1,67 @@
-# Validation results and scope / 验证结果与范围
+# Validation scope / 验证范围
 
 ## English
 
-The suite-v0.8.0-preview.1 validation uses Windows and Node.js 24, the pinned
-DSH 0.1.5-rc.2 source, and packages built independently of any production installation.
+This preview is validated on Windows and Node.js 24 against official DSH
+`0.2.0-rc.2`. Packaging and installation use clean directories and locked registry
+inputs, independent of production installations.
 
-| Check | Result and scope |
-|---|---|
-| Clean source build | Exact upstream export plus reviewed patch; host, client and Web assets |
-| Core regressions | 724 passed; one upstream test skipped |
-| Provider and scanner tests | 120 passed with network blocked |
-| Three extensions | 23 passed; repeated against installed packages |
-| Historical xAI contracts | 11 passed; excluded from default installation |
-| TypeScript SDK | One prepared-input replay scenario passed, including two turns and persisted notices; the other SDK scenarios are not part of this check |
-| Preset checks | Derived-source parity and six contract groups; three native generation/replay/rollback checks |
-| Installed compositions | Web and headless load the actual provider; authenticated local Web document includes its client; only synthetic inference |
-| Installation | Default dry-run, fresh-data protection, recoverable replacement and exact-receipt rollback |
+| Check | Scope |
+| --- | --- |
+| Provider and scanners | 119 passing offline tests; all real sockets, TLS and fetch blocked in the unit runner. |
+| Preset | Read-only deterministic derivation, official standard parity and source checks; generated tracked files are not rewritten by tests. |
+| Native installation | Two attributed tarballs, locked official runtime and pnpm toolchain, native plugin manager, official standard snapshot equality. |
+| Web | Actual browser application, synthetic account/catalog/quota, native Config save and cold replay; standard/Grok tool parity, no old recall/work-state mounts. |
+| Headless | Actual native one-shot runner and a synthetic completed turn; official preset registry and model-selection settings composed in the isolated profile. |
+| Lifecycle | Native provider volatile updates, disposal and remount; repeated installs activate each bundle once. |
+| Installation transactions | Dry-run without target changes, unknown/legacy target rejection, invalid proxy rejection, failed candidate preservation, replacement and receipt rollback; synthetic session bytes unchanged. |
+| Dependencies and distribution | Current provider production/development, runtime/toolchain and native profile graphs reviewed; both packages retain required licenses; source/history and document/link checks. |
 
-These checks cover proxy validation and shared dispatcher ownership, catalog
-failure, usage freshness, image occurrences, authorization, preparation notice
-replay, cancellation, full request budgets, and zero inference POSTs on refusal.
-Native composition checks ensure one image recall per mode, Grok-only work state,
-standard as default, correct disposal, and retained historical messages.
+Network cases include required/invalid/changed proxy, shared dispatcher, cancellation,
+terminal 426, catalog expiry/failure/concurrency, prepared-call snapshot/model/effort
+drift, tool IDs and errors, image projections/offloading, duplicate image accounting,
+UTF-8 budget boundaries and zero inference POST after rejection. Quota tests include
+missing values, expiry, throttling and account isolation.
 
-Credentials are removed from test environments. Tests block external network
-requests; Web tests allow only their own listener. Source/dependency downloads
-are separate network operations. The root provider, build-kit and runtime npm
-audits reported zero known vulnerabilities on 2026-09-13. The complete frozen
-upstream pnpm workspace reports 60 advisory records, including 29 high-severity
-records; see the separate [dependency review](DEPENDENCY-REVIEW.md).
+Web fixtures replace only external account responses and use a new isolated home.
+The browser allows fixture loopback traffic only; fixture processes block real
+network and subprocess access. Headless inference uses a local synthetic adapter.
+Native Windows app-discovery registry probes are blocked without executing reg.exe.
+No production credential, account, conversation or installed file is read.
 
-CI repeats the checks from the final source commit. The release description
-links that commit and its successful run. Historical local production acceptance
-does not establish acceptance of this public combination. Real OAuth, live model
-and image requests, production usage UI, complete SDK coverage, Python SDK
-execution and existing-data migration are outside this release's validation.
+SDK validation is limited to native LlmRuntime prepared-call dispatch, tool-history
+and offloaded-image cases in provider tests. There is no full SDK, Desktop, ACP,
+macOS or Linux acceptance. There is no real OAuth, live catalog/quota, model text
+or image inference, or comparative model-quality acceptance for this combination.
+Historical production reports are excluded from these results.
 
-## 简体中文
+## 中文
 
-suite-v0.8.0-preview.1 在 Windows、Node.js 24 下，从固定 DSH 0.1.5-rc.2 源码构建；
-不依赖任何生产安装。上表两种语言共用数值：核心 724 项通过、1 项上游跳过；provider／
-扫描 120 项、三个扩展 23 项、历史合约 11 项通过。TypeScript SDK 仅验收一个图片准备
-提示回放场景，包括两轮交互和持久化提示；不将其他未选择场景计入通过数。
+本预览版在 Windows、Node.js 24 上针对官方 DSH 0.2.0-rc.2 验证。
+打包与安装使用干净目录和锁定注册表输入，不依赖生产安装。
 
-预设完成派生一致性、六组契约及三组原生代际／回放／回滚检查。独立安装验证 Web 和
-headless 实际加载 provider、本地认证后页面包含 provider 客户端，并仅执行合成推理。
-安装检查覆盖默认 dry-run、新数据保护、可恢复替换和精确回执回滚。
+离线 provider／扫描器测试共 119 项通过，单元测试阻断真实 socket、TLS 和 fetch。
+预设通过只读确定性派生、官方 standard 一致性和来源检查，不重写受版本控制的生成文件。
+两个 tarball 通过官方管理器安装，并核对官方 standard 快照。
 
-测试覆盖代理配置与 dispatcher 归属、目录失败、额度新鲜度、图片出现次数和权限、准备提示回放、
-取消、完整请求预算及拒绝后零推理 POST。两种模式各挂载一次图片召回，仅 Grok 模式包含工作状态，
-默认保持 standard；同时检查释放、代际继承和历史消息保留。
+实际 Web 浏览器验证合成账户、目录、额度、Config 保存和冷加载；
+两种模式的工具一致，不挂载旧召回／工作状态功能。
+headless 使用原生单次任务运行器及合成 adapter 完成一轮任务；
+其隔离 profile 补充官方预设注册器和模型选择设置。
+生命周期测试涵盖更新、释放与重新挂载；重复安装时每个 bundle 只启用一次。
 
-测试清除继承凭据并阻断外网；Web 测试仅允许自己的监听服务。源码和依赖下载单独进行。
-2026-09-13 的 provider、构建工具及运行环境 npm 检查均未报告已知漏洞；上游完整冻结
-pnpm 工作区另有 60 条告警记录，其中 29 条高危，见[依赖检查](DEPENDENCY-REVIEW.md)。
+安装验证包括 dry-run 无目标修改、未知／旧目标拒绝、非法代理、失败保留、
+替换和 receipt 回滚，并核对合成会话字节不变。
+覆盖代理、取消、426、目录失效／并发、prepared-call 快照与路由漂移、
+工具 ID／错误、图片准备／卸载／重复计数、UTF-8 预算边界以及拒绝后零推理 POST；
+额度覆盖缺失、过期、限流和账户隔离。
 
-CI 对最终提交重复验收，Release 正文提供对应提交和成功运行链接。历史本机生产验收不能替代
-本公开组合的验收。本版未验证真实 OAuth、模型和图片请求、生产额度界面、完整 SDK、Python SDK
-执行或既有数据迁移。[发行规范](PUBLIC-RELEASE.md)与[服务说明](SERVICE-ACCESS.md)记录相应边界。
+测试使用新隔离 home；Web 仅以合成响应替代外部账户接口，浏览器仅允许本地 fixture 流量，
+fixture 进程阻断真实网络和子进程。headless 推理由本地合成 adapter 完成。
+原生 Windows 应用发现触发的注册表探测被阻断，不执行 reg.exe。
+不读取生产凭据、账户、会话或安装文件。许可、源码／历史、文档和依赖均另行核查。
+
+SDK 仅验证 provider 测试中的原生 LlmRuntime prepared-call、工具历史和卸载图片专项。
+未验收完整 SDK、Desktop、ACP、macOS 或 Linux。
+未完成本组合真实 OAuth、线上目录／额度、文字／图片推理或模型质量对比；
+历史生产报告不计入本次结果。

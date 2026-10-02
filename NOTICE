@@ -1,12 +1,15 @@
 dsh-supergrok
 Additional work Copyright 2026 Kaizin0226.
 Based on dsh-llm-grok-oauth, Copyright 2026 wangyaominde (MIT).
-Core overlay and standard preset derive from DeepSeek Harness,
-Copyright 2026 DeepSeek (MIT).
-
-Grok Build reference and adapted protocol, image policy and persona material:
+Standard preset derived from DeepSeek Harness, Copyright 2026 DeepSeek (MIT).
+Adapted Grok Build protocol, image policy and persona material:
 Copyright 2023-2026 SpaceXAI. Licensed under Apache License 2.0.
-References: xai-org/grok-build@72a61251fcffb464bcc687aeb5a998e5a98ec0c9
-and @37949780c144e37df692e3d669051a21fec24f20; protocol @bc7f02eddd3d84085849dc19ed216f11c23b0571.
-Adaptations use native DSH tools, permissions, models and sessions; they do not
-include or launch the Grok Build runtime. See THIRD-PARTY-NOTICES.md for scope.
+Protocol/behavior: xai-org/grok-build@2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8.
+Earlier image envelope: @bc7f02eddd3d84085849dc19ed216f11c23b0571.
+Adaptations use native DSH tools, permissions, models and sessions.
+The Grok Build runtime is not included or launched.
+See THIRD-PARTY-NOTICES.md and UPSTREAM-PROVENANCE.md.
+
+本项目保留原 provider、DSH 的 MIT 声明，自有新增部分沿用 MIT。
+Grok Build 衍生材料保留 Apache-2.0 条款与署名，使用 DSH 原生机制，
+不包含或启动 Grok Build 运行时。

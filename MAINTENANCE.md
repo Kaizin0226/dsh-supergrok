@@ -1,23 +1,21 @@
-# SuperGrok input maintenance
+# Native provider maintenance / 原生 provider 维护
 
-The provider uses the authenticated dynamic catalog. No model version is a default in this package. DSH owns tools, sessions, permissions and the model-visible history.
+## English
 
-`maxRequestBodyBytes` is a validated positive integer. The deployment default is 40,000,000 bytes, a local budget rather than an official API limit. The adapter counts the final serialized UTF-8 body, including text, tools and every image occurrence. An oversized request fails with `REQUEST_BODY_TOO_LARGE` before inference authentication or POST; catalog resolution may already have occurred. No image eviction, automatic splitting or provider fallback occurs.
+DSH 0.2 owns tools, permissions, sessions and attachment storage. The provider implements the native prepared-call interface and uses the authenticated catalog as its only model and reasoning-effort source. Each prepared call binds the captured catalog snapshot, model, effort and image request target. Expiration or route drift fails closed; no model substitution or automatic retry occurs.
 
-The optional prepared-input API resolves durable image versions once per call using DSH's attachment service. It returns notices separately from serialization, for the host to log before sending. Images unchanged in dimensions, byte count and format produce no transformation notice. Changed images report preparation, not successful delivery. Prepared bytes remain bound to the image occurrences and exact captured route.
+`maxRequestBodyBytes` is a positive integer with a default of 40,000,000 bytes. This is a local limit, not an official service limit. It counts the complete serialized UTF-8 request, including tools and every image occurrence. Oversized requests fail with `REQUEST_BODY_TOO_LARGE` before an inference POST. Catalog resolution may already have occurred. Offloaded native images become text placeholders without reading image bytes; the provider does not evict attachments or split requests to fit the budget.
 
-Original durable attachments and provider call IDs are not changed. Tests use synthetic attachments and stubbed network responses. Online acceptance is a separate authorization step.
+Prepared image data is bound to its captured occurrences and route. DSH owns the native attachment lifecycle. This release does not promise the retired host's image-preparation notice persistence, recall tools or work-state summaries. Provider package and protocol snapshot versions are managed separately. HTTP 426 is terminal and does not trigger protocol negotiation or resending.
 
-## 中文：输入维护
+Maintain the two native plugins and pinned official runtime together. Use synthetic fixtures with real service access blocked. Run [validation](docs/VALIDATION.md) after relevant changes and review dependency lock updates before distributing packages. Live OAuth and model acceptance remain outside the preview's verified scope. See [installation](docs/INSTALLATION.md) for recoverable replacement.
 
-provider 使用认证后的动态目录，包内不设置默认型号。工具、会话、权限和模型可见历史由 DSH 管理。
+## 中文
 
-`maxRequestBodyBytes` 必须是合法正整数，部署默认值为 40,000,000 字节。这是本地预算，不是官方 API 限制。
-适配器统计最终序列化 UTF-8 请求体，包括文字、工具与每次图片出现。超限时在推理认证或 POST 前以
-`REQUEST_BODY_TOO_LARGE` 拒绝；此前可能已解析目录。不驱逐图片、不自动拆分或回退 provider。
+DSH 0.2 管理工具、权限、会话和附件存储。provider 实现原生 prepared-call 接口，认证目录是唯一模型及推理档位来源。每次准备调用绑定捕获的目录快照、模型、effort 和图片请求目标；过期或路由漂移时拒绝，不替换模型、不自动重试。
 
-可选 prepared-input API 每次调用通过 DSH 附件服务解析一次持久图片版本，提示与序列化结果分离，
-由 host 在发送前记录。尺寸、字节数、格式未变的图片不产生转换提示；变化提示仅表示准备完成，不代表发送成功。
-准备字节绑定到对应图片出现项和精确捕获路由。
+`maxRequestBodyBytes` 为正整数，默认 40,000,000 字节。这是本地限制，不是官方服务限制；统计完整序列化 UTF-8 请求，包括工具和每次图片出现。超限以 `REQUEST_BODY_TOO_LARGE` 拒绝，不发送推理 POST；此前可能已解析目录。原生卸载图片转为文字占位，不读取图片字节；不驱逐附件、不拆分请求以适配预算。
 
-原持久附件与 provider call ID 不变。测试使用合成附件和模拟网络响应；线上验收单独授权。
+准备后的图片数据绑定对应出现项和捕获路由，原生附件生命周期由 DSH 管理。本版不承诺退役 host 的图片准备提示持久化、召回工具或工作状态摘要。provider 包版本和协议快照版本分别维护；HTTP 426 为终止错误，不触发协议协商或重发。
+
+维护两个原生插件及固定官方运行环境，测试使用合成数据并阻断真实服务。相关变更后执行[验证](docs/VALIDATION.md)，分发前审核依赖锁变更。真实 OAuth 和模型验收不属于本预览版已验证范围。可恢复替换方法见[安装指南](docs/INSTALLATION.md)。

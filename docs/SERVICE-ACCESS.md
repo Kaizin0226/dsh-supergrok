@@ -1,64 +1,47 @@
 # Service access and licensing / 服务接入与许可
 
-Reviewed: **2026-09-13**. This is a technical source/documentation review, not
-a legal opinion or a grant of service access.
+Reviewed / 核对日期: **2026-10-03**.
 
 ## English
 
-The original provider and DSH source carry MIT terms. Selected Grok Build
-derivatives retain Apache-2.0 attribution; see [notices](../THIRD-PARTY-NOTICES.md)
-and [fixed provenance](../UPSTREAM-PROVENANCE.md). Original license texts are
-preserved. This review does not relicense upstream work or claim trademark rights.
+This is an unofficial experimental integration. The [official Grok Build guide](https://docs.x.ai/build/overview)
+does not establish authorization for this third-party provider to reuse its
+subscription OAuth client identifier. This is a source/documentation review,
+not live acceptance or a legal opinion.
 
-The [official Grok Build guide](https://docs.x.ai/build/overview) describes
-authentication and integration of Grok Build itself. The reviewed guide does
-not establish support for this DSH provider reusing its subscription OAuth
-client identity. A public client ID, readable source or successful login is not
-proof of such authorization. This integration is unofficial and experimental.
+[Consumer terms](https://x.ai/legal/terms-of-service) were last updated September 11, 2026.
+The [acceptable-use policy](https://x.ai/legal/acceptable-use-policy), effective
+August 14, 2026, restricts unauthorized automated access, circumventing rate limits
+or protective measures, and misleading service identity. Authorization is a
+service-side decision independent of source licensing. This review establishes
+no specific authorization for this provider.
 
-The [consumer terms](https://x.ai/legal/terms-of-service), effective 2026-09-01,
-make service use subject to applicable terms and policies. The
-[acceptable-use policy](https://x.ai/legal/acceptable-use-policy), effective
-2026-08-14, restricts unauthorized automated access and circumvention of service
-restrictions. These general provisions do not by themselves settle whether this
-particular third-party OAuth client is authorized. This review has established
-neither explicit authorization nor a client-specific prohibition; that uncertainty
-remains. A disclaimer does not override applicable restrictions.
+Use only your own account authorization completed in DSH. Do not extract official
+client credentials, share grants, bypass entitlements or rate limits, or treat a
+local proxy as permission to evade restrictions. The provider preserves DSH
+identity and records a fixed protocol compatibility header separately from its
+package version. HTTP 426 is terminal.
 
-Use only your own DSH account authorization. Do not extract official-client
-credentials, share grants, bypass eligibility or rate limits, or treat the
-required local proxy as permission to bypass service restrictions. The provider
-has no alternative-provider fallback. Its live catalog reflects account
-availability, not a legal assessment. Eligibility and protocols may change
-independently of the pinned source.
-
-Reassess service compatibility when the implementation or applicable terms
-change. A confirmed conflict requires resolution before further distribution
-of the affected integration. API-key access is not an automatic fallback, and
-the project does not claim official endorsement. This review involved no real
-login or model request; the preview has no live-service validation result.
+MIT/Apache-2.0, a public client ID, readable source, successful login or protocol
+compatibility do not grant third-party service access or endorsement.
+The catalog describes account availability, not legal authorization.
+A concrete conflict with applicable terms requires pausing affected distribution
+until resolved. This release performed no real login or model request.
 
 ## 中文
 
-核对日期：**2026-09-13**。这是源码与文档层面的技术核对，不是法律意见或服务授权。
+本项目为非官方实验性集成。官方 Grok Build 指南不足以证明本第三方 provider
+复用订阅 OAuth 客户端标识已获授权；本次是源码／文档核对，不是线上验收或法律意见。
 
-原 provider 与 DSH 源码适用 MIT；所选 Grok Build 衍生内容保留 Apache-2.0 许可与署名，
-见[第三方说明](../THIRD-PARTY-NOTICES.md)与[固定来源](../UPSTREAM-PROVENANCE.md)。
-许可证保留原文，不重新授权上游作品，也不主张商标权利。
+消费者条款于 2026-09-11 更新；使用政策于 2026-08-14 生效，
+限制未经授权的自动访问、绕过限流／保护措施及误导服务身份。
+授权由服务方决定，与源码许可独立；本次未建立针对本 provider 的明确授权。
 
-[Grok Build 官方指南](https://docs.x.ai/build/overview)描述 Grok Build 自身的认证和集成。
-所核对指南不足以证明本 DSH provider 复用订阅 OAuth 客户端标识已获支持。
-公开客户端 ID、可读源码或登录成功均不是该授权的证明。本项目为非官方实验性集成。
+只使用自己在 DSH 中完成的账户授权，不提取官方客户端凭据、共享授权、
+绕过资格或限流，不将代理视为绕过限制的许可。
+保留 DSH 身份，固定协议兼容请求头与包版本独立；HTTP 426 终止。
 
-[消费者条款](https://x.ai/legal/terms-of-service)于 2026-09-01 生效，要求服务使用遵守适用条款与政策。
-[使用政策](https://x.ai/legal/acceptable-use-policy)于 2026-08-14 生效，限制未经授权的自动访问及绕过服务限制。
-这些一般条款本身不足以确定本第三方 OAuth 客户端是否获授权。本次核对既未建立明确授权，
-也未找到针对本客户端的明确禁止结论；不确定性仍然存在。免责声明不能覆盖适用限制。
-
-仅使用用户自己在 DSH 中完成的账户授权，不提取官方客户端凭据、共享授权、绕过账户资格或限流，
-也不把必填本地代理视为绕过服务限制的许可。provider 不回退到其他服务商。
-实时目录反映账户可用性，不是法律判断；资格和协议可能独立于固定源码变化。
-
-实现或适用条款变化时重新评估服务兼容性。确认存在冲突时，须在继续分发受影响集成前解决。
-API key 接入不是自动回退路径，本项目不宣称官方背书。核对未执行真实登录或模型请求，
-预览版没有真实服务验证结论。
+源码许可、公开客户端 ID、可读源码、登录成功或协议兼容均不能替代第三方服务授权，
+也不构成官方背书。目录反映可用性，不是法律判断。
+确认存在适用条款的具体冲突时，暂停受影响分发直至解决。
+本发行未执行真实登录或模型请求。
