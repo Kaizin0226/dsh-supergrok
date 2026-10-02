@@ -15,7 +15,6 @@ jobs:
     timeout-minutes: 30
     env:
       DSH_TELEMETRY_DISABLED: '1'
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/dsh-supergrok-native/browsers
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -42,7 +41,11 @@ jobs:
           npm audit --prefix "$env:RUNNER_TEMP/dsh-supergrok-native/bundle" --audit-level=low
           exit $LASTEXITCODE
       - name: Install isolated test browser
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/dsh-supergrok-native/browsers
         run: node node_modules/playwright/cli.js install chromium
       - name: Verify native Web and headless compositions and rollback
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/dsh-supergrok-native/browsers
         shell: pwsh
         run: node scripts/test-installed.mjs --work-dir "$env:RUNNER_TEMP/dsh-supergrok-native"
