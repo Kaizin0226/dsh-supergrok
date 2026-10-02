@@ -1,45 +1,37 @@
-# Preset source provenance / 预设源码来源
+# Grok preset source / Grok 预设来源
 
 ## English
 
-Preset 0.9.1 derives from the complete official standard composition at DSH
-`dsh-v0.1.5-rc.2`, commit `fb2c4b9e698e30edb738bca4cf0618587db7d203`.
-`upstream-standard.cordis.yml` retains that input. The derivation script adds
-one historical-image recall row to local standard, then replaces its persona
-and adds one work-state row for Grok mode. Other capability rows remain equal,
-including native subagents and disabled external-agent entries.
+Version 1.1.0 derives from official DSH 0.2.0-rc.2 standard at
+`639ed015397290b3745d163aafe02ffee4aa3f84`, retained in upstream-standard.patch.yml.
+The derivation changes only identity, display metadata and persona.
+All non-persona plugin/configuration content remains equal.
+The read-only `--check` mode never rewrites the generated tracked patch.
 
-The base lock's distribution version `0.1.5-rc.2.grok.1` identifies the local
-standard package baseline. It differs from the local functional reference
-release `0.1.5-rc.2.grok.3` and public suite version `0.8.0`.
+Behavior principles are adapted from Grok Build 1.0.45 at
+[2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8](https://github.com/xai-org/grok-build/tree/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8),
+reviewed 2026-10-03. reference-lock.json identifies files and inclusion/exclusion
+boundaries. The condensed persona covers scoped execution, preservation of user
+work, proportional evidence and clear reporting. Native DSH owns background jobs,
+child agents, tools and compaction; no Grok-specific storage, runtime, UI syntax
+or automatic memory behavior is introduced.
 
-The [reference lock](reference-lock.json) separates protocol reference
-`bc7f02eddd3d84085849dc19ed216f11c23b0571` (1.0.12) from behavior and image-design
-review at `37949780c144e37df692e3d669051a21fec24f20`. Earlier persona principles
-also reference `72a61251fcffb464bcc687aeb5a998e5a98ec0c9`. The newer design review
-does not advance the transport protocol or establish live-service compatibility.
-Preserve the supplied MIT and Apache-2.0 licenses and attribution.
+Provider protocol provenance is separate. The preset selects no model, provider,
+effort or permission and leaves the global default standard. Offline parity does
+not establish improved model performance. Both MIT and applicable Apache-2.0
+license texts/notices ship in the package.
 
-The persona specifies clear complete sentences, factual code comments and
-verification of changeable facts from historical memory. It introduces no
-automatic memory access, model choice, authentication route or external runtime.
-Loaded generations retain their composition; cold loads use the installed
-preset. Restoring a preset does not rewrite historical messages.
+## 中文
 
-## 简体中文
+1.1.0 从上述官方 DSH 固定 standard 派生，保留原文；只改变标识、展示与 persona，
+其余插件和配置保持一致。`--check` 只读，不重写受版本控制的生成文件。
 
-预设 0.9.1 从 DSH `dsh-v0.1.5-rc.2` 的完整 standard 组合派生，上游提交为
-`fb2c4b9e698e30edb738bca4cf0618587db7d203`。`upstream-standard.cordis.yml`
-保留原始输入。派生脚本为本地 standard 增加一次历史图片召回，然后替换 persona 并为
-Grok 模式增加一次工作状态扩展；其余能力行保持一致，包括原生子 Agent 及禁用的外部 Agent 项。
+行为原则参考上述 Grok Build 1.0.45 固定提交，于 2026-10-03 核对；
+reference-lock.json 记录文件与纳入／排除边界。
+精简 persona 强调范围明确的执行、保留用户工作、相称验证及清晰报告。
+后台任务、子 Agent、工具和压缩由 DSH 原生机制负责，不引入 Grok 专属存储、
+运行时、界面语法或自动记忆流程。
 
-基础锁中的 `0.1.5-rc.2.grok.1` 指本地 standard 包基线，与本地功能参考发行
-`0.1.5-rc.2.grok.3`、公开 suite 版本 `0.8.0` 分别记录。
-
-[参考锁](reference-lock.json)区分协议参考 `bc7f02eddd3d84085849dc19ed216f11c23b0571`
-（1.0.12）和行为、图片设计核对参考 `37949780c144e37df692e3d669051a21fec24f20`；
-早期 persona 原则另参考 `72a61251fcffb464bcc687aeb5a998e5a98ec0c9`。
-新版设计核对不代表协议升级或真实服务兼容验收。保留随附 MIT、Apache-2.0 许可及署名。
-
-Persona 强调完整易懂的句子、准确的代码注释及核实历史记忆中的易变事实，不新增自动记忆访问、
-模型选择、认证路由或外部运行时。已加载代际保持原组合，冷加载使用安装后的预设；恢复预设不改写历史消息。
+provider 协议来源独立。预设不选择模型、provider、effort 或权限，
+全局默认仍为 standard；离线一致性不证明模型效果提升。
+包内保留 MIT 及适用 Apache-2.0 许可和署名。

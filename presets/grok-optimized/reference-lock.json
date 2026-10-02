@@ -1,41 +1,43 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "https://github.com/xai-org/grok-build",
-  "reviewedOn": "2026-09-12",
-  "protocol": {
-    "commit": "bc7f02eddd3d84085849dc19ed216f11c23b0571",
-    "packageVersion": "1.0.12",
-    "status": "unchanged-protocol-reference",
-    "note": "The design review does not revalidate or advance the transport protocol reference."
+  "reviewedOn": "2026-10-03",
+  "host": {
+    "version": "0.2.0-rc.2",
+    "baseline": "upstream-standard.patch.yml"
   },
   "behavior": {
-    "commit": "37949780c144e37df692e3d669051a21fec24f20",
+    "commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+    "packageVersion": "1.0.45",
     "files": [
-      "crates/codegen/xai-grok-agent/templates/prompt.md"
+      "crates/codegen/xai-grok-agent/templates/prompt.md",
+      "crates/codegen/xai-grok-agent/templates/subagent_prompt.md",
+      "crates/codegen/xai-grok-agent/src/prompt/browser_verification.rs",
+      "crates/codegen/xai-grok-agent/src/prompt/template.rs",
+      "crates/common/xai-grok-compaction/src/code_compaction/templates/full_replace_summary_prompt.txt"
     ],
-    "scope": [
-      "Plain complete sentences and audience-appropriate terminology",
-      "Scoped factual code comments instead of suppressing problems",
-      "Historical memory is not current evidence"
+    "adopted": [
+      "Intent-aware scoped execution and preservation of existing work",
+      "Evidence-based completion and proportional validation",
+      "Browser interaction, shared state and edge-case verification when applicable",
+      "Self-contained concise communication"
+    ],
+    "nativeDshResponsibilities": [
+      "Actual tool schemas and tool-specific instructions",
+      "Plan mode and permission enforcement",
+      "Subagent lifecycle, inheritance and route selection",
+      "Background job handles, notifications, waiting and cancellation",
+      "Context compaction and tool-result pruning"
     ],
     "excluded": [
-      "Grok Build identity, tool names and schemas",
-      "Memory storage layout, automatic search and automatic writes"
-    ]
+      "Grok Build identity, executable, ACP runtime and exact tool names",
+      "Automatic memory storage, search, writes and generated index conventions",
+      "Grok-specific scratch paths, UI syntax and compaction transcript format",
+      "Additional model calls, monitoring, provider fallback or permission changes"
+    ],
+    "acceptance": "Source review and offline composition checks; no comparative model-performance claim"
   },
-  "images": {
-    "commit": "37949780c144e37df692e3d669051a21fec24f20",
-    "files": [
-      "crates/codegen/xai-grok-shell/src/session/image_normalize.rs"
-    ],
-    "scope": [
-      "Existing image size limits and transformation notices compared with source",
-      "Existing normalization cache reuse; no image implementation change"
-    ],
-    "excluded": [
-      "Automatic image eviction or dropping",
-      "Oversized-original fallback after failed normalization"
-    ],
-    "acceptance": "source-comparison-only; not online provider acceptance"
+  "transport": {
+    "scope": "unchanged; provider protocol provenance remains in components.lock.json"
   }
 }

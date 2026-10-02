@@ -1,26 +1,37 @@
 {
   "name": "grok-optimized-preset",
-  "version": "0.9.1",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "files": [
-    "agent.cordis.yml",
-    "preset.yml",
-    "base-lock.json",
-    "SOURCE-PROVENANCE.md",
+    "cordis.patch.yml",
+    "upstream-standard.patch.yml",
+    "persona-prefix.md",
     "reference-lock.json",
+    "SOURCE-PROVENANCE.md",
     "RELEASE-NOTES.md",
     "LICENSE",
     "NOTICE",
     "Grok-Build-Apache-2.0.txt",
-    "PROVENANCE.md"
+    "DeepSeek-Harness-MIT.txt"
   ],
   "scripts": {
     "test": "node ./test-preset.mjs"
   },
-  "peerDependencies": {
-    "dsh-tool-attachment-history": "1.2.0",
-    "dsh-grok-work-state-context": "1.2.0"
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "marketplace": {
+      "profiles": [
+        "web",
+        "headless"
+      ],
+      "requiresRestart": true
+    }
   },
-  "license": "(MIT AND Apache-2.0)"
+  "license": "(MIT AND Apache-2.0)",
+  "engines": {
+    "node": ">=24 <25"
+  }
 }
